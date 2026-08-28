@@ -33,6 +33,11 @@
             btnSaveAs = new Button();
             btnOpenSave = new Button();
             grpTrainer = new GroupBox();
+            label5 = new Label();
+            label4 = new Label();
+            label3 = new Label();
+            label2 = new Label();
+            label1 = new Label();
             txtPlayTime = new TextBox();
             numMoney = new NumericUpDown();
             txtRivalName = new TextBox();
@@ -86,6 +91,7 @@
             btnSaveAs.TabIndex = 1;
             btnSaveAs.Text = "Enregistrer sous...";
             btnSaveAs.UseVisualStyleBackColor = true;
+            btnSaveAs.Click += btnSaveAs_Click;
             // 
             // btnOpenSave
             // 
@@ -99,6 +105,11 @@
             // 
             // grpTrainer
             // 
+            grpTrainer.Controls.Add(label5);
+            grpTrainer.Controls.Add(label4);
+            grpTrainer.Controls.Add(label3);
+            grpTrainer.Controls.Add(label2);
+            grpTrainer.Controls.Add(label1);
             grpTrainer.Controls.Add(txtPlayTime);
             grpTrainer.Controls.Add(numMoney);
             grpTrainer.Controls.Add(txtRivalName);
@@ -110,6 +121,51 @@
             grpTrainer.TabIndex = 1;
             grpTrainer.TabStop = false;
             grpTrainer.Text = "Informations du dresseur";
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(6, 298);
+            label5.Name = "label5";
+            label5.Size = new Size(104, 20);
+            label5.TabIndex = 9;
+            label5.Text = "Temps de jeu :";
+            // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Location = new Point(11, 229);
+            label4.Name = "label4";
+            label4.Size = new Size(61, 20);
+            label4.TabIndex = 8;
+            label4.Text = "Argent :";
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new Point(12, 178);
+            label3.Name = "label3";
+            label3.Size = new Size(48, 20);
+            label3.TabIndex = 7;
+            label3.Text = "Rival :";
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(11, 135);
+            label2.Name = "label2";
+            label2.Size = new Size(49, 20);
+            label2.TabIndex = 6;
+            label2.Text = "Nom :";
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(23, 86);
+            label1.Name = "label1";
+            label1.Size = new Size(37, 20);
+            label1.TabIndex = 5;
+            label1.Text = "Jeu :";
             // 
             // txtPlayTime
             // 
@@ -177,9 +233,9 @@
             chkBadgeEarth.AutoSize = true;
             chkBadgeEarth.Location = new Point(25, 249);
             chkBadgeEarth.Name = "chkBadgeEarth";
-            chkBadgeEarth.Size = new Size(101, 24);
+            chkBadgeEarth.Size = new Size(64, 24);
             chkBadgeEarth.TabIndex = 7;
-            chkBadgeEarth.Text = "checkBox8";
+            chkBadgeEarth.Text = "Terre";
             chkBadgeEarth.UseVisualStyleBackColor = true;
             // 
             // chkBadgeVolcano
@@ -187,9 +243,9 @@
             chkBadgeVolcano.AutoSize = true;
             chkBadgeVolcano.Location = new Point(25, 219);
             chkBadgeVolcano.Name = "chkBadgeVolcano";
-            chkBadgeVolcano.Size = new Size(101, 24);
+            chkBadgeVolcano.Size = new Size(75, 24);
             chkBadgeVolcano.TabIndex = 6;
-            chkBadgeVolcano.Text = "checkBox7";
+            chkBadgeVolcano.Text = "Volcan";
             chkBadgeVolcano.UseVisualStyleBackColor = true;
             // 
             // chkBadgeMarsh
@@ -197,9 +253,9 @@
             chkBadgeMarsh.AutoSize = true;
             chkBadgeMarsh.Location = new Point(25, 189);
             chkBadgeMarsh.Name = "chkBadgeMarsh";
-            chkBadgeMarsh.Size = new Size(101, 24);
+            chkBadgeMarsh.Size = new Size(75, 24);
             chkBadgeMarsh.TabIndex = 5;
-            chkBadgeMarsh.Text = "checkBox6";
+            chkBadgeMarsh.Text = "Marais";
             chkBadgeMarsh.UseVisualStyleBackColor = true;
             // 
             // chkBadgeSoul
@@ -207,9 +263,9 @@
             chkBadgeSoul.AutoSize = true;
             chkBadgeSoul.Location = new Point(25, 159);
             chkBadgeSoul.Name = "chkBadgeSoul";
-            chkBadgeSoul.Size = new Size(101, 24);
+            chkBadgeSoul.Size = new Size(62, 24);
             chkBadgeSoul.TabIndex = 4;
-            chkBadgeSoul.Text = "checkBox5";
+            chkBadgeSoul.Text = "Âme";
             chkBadgeSoul.UseVisualStyleBackColor = true;
             // 
             // chkBadgeRainbow
@@ -217,9 +273,9 @@
             chkBadgeRainbow.AutoSize = true;
             chkBadgeRainbow.Location = new Point(25, 129);
             chkBadgeRainbow.Name = "chkBadgeRainbow";
-            chkBadgeRainbow.Size = new Size(101, 24);
+            chkBadgeRainbow.Size = new Size(75, 24);
             chkBadgeRainbow.TabIndex = 3;
-            chkBadgeRainbow.Text = "checkBox4";
+            chkBadgeRainbow.Text = "Prisme";
             chkBadgeRainbow.UseVisualStyleBackColor = true;
             // 
             // chkBadgeThunder
@@ -227,9 +283,9 @@
             chkBadgeThunder.AutoSize = true;
             chkBadgeThunder.Location = new Point(25, 99);
             chkBadgeThunder.Name = "chkBadgeThunder";
-            chkBadgeThunder.Size = new Size(101, 24);
+            chkBadgeThunder.Size = new Size(77, 24);
             chkBadgeThunder.TabIndex = 2;
-            chkBadgeThunder.Text = "checkBox3";
+            chkBadgeThunder.Text = "Foudre";
             chkBadgeThunder.UseVisualStyleBackColor = true;
             // 
             // chkBadgeCascade
@@ -237,9 +293,9 @@
             chkBadgeCascade.AutoSize = true;
             chkBadgeCascade.Location = new Point(25, 69);
             chkBadgeCascade.Name = "chkBadgeCascade";
-            chkBadgeCascade.Size = new Size(101, 24);
+            chkBadgeCascade.Size = new Size(86, 24);
             chkBadgeCascade.TabIndex = 1;
-            chkBadgeCascade.Text = "checkBox2";
+            chkBadgeCascade.Text = "Cascade";
             chkBadgeCascade.UseVisualStyleBackColor = true;
             // 
             // chkBadgeBoulder
@@ -247,9 +303,9 @@
             chkBadgeBoulder.AutoSize = true;
             chkBadgeBoulder.Location = new Point(25, 39);
             chkBadgeBoulder.Name = "chkBadgeBoulder";
-            chkBadgeBoulder.Size = new Size(101, 24);
+            chkBadgeBoulder.Size = new Size(72, 24);
             chkBadgeBoulder.TabIndex = 0;
-            chkBadgeBoulder.Text = "checkBox1";
+            chkBadgeBoulder.Text = "Roche";
             chkBadgeBoulder.UseVisualStyleBackColor = true;
             // 
             // statusStrip1
@@ -328,5 +384,10 @@
         private StatusStrip statusStrip1;
         private ToolStripStatusLabel tslStatus;
         private ToolStripStatusLabel tslVersion;
+        private Label label5;
+        private Label label4;
+        private Label label3;
+        private Label label2;
+        private Label label1;
     }
 }
