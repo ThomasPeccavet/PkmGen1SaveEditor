@@ -26,9 +26,7 @@ public partial class MainForm : Form
         lblCurrentFile.Text = "Aucun fichier chargé";
         tslStatus.Text = "Prêt — ouvrez un fichier .sav";
 
-        btnSaveAs.Enabled = false;
-        grpTrainer.Enabled = false;
-        grpBadges.Enabled = false;
+        SetEditorEnabled(false);
     }
 
     private void btnOpenSave_Click(object sender, EventArgs e)
@@ -52,16 +50,16 @@ public partial class MainForm : Form
 
             _currentSave = saveFile;
 
+            ResetDisplayedValues();
+
+            SetEditorEnabled(true);
+
             lblCurrentFile.Text = saveFile.FileName;
 
+            DisplaySaveData(saveFile);
+
             tslStatus.Text =
-                $"Fichier chargé — {saveFile.Data.Length:N0} octets";
-
-            grpTrainer.Enabled = true;
-            grpBadges.Enabled = true;
-            btnSaveAs.Enabled = true;
-
-            ResetDisplayedValues();
+                $"Sauvegarde valide — checksum 0x{saveFile.StoredChecksum:X2}";
         }
         catch (InvalidDataException ex)
         {
@@ -136,6 +134,7 @@ public partial class MainForm : Form
 
         try
         {
+            ApplyInterfaceChanges();
             File.WriteAllBytes(dialog.FileName, _currentSave.Data);
 
             tslStatus.Text =
@@ -146,6 +145,14 @@ public partial class MainForm : Form
                 "Enregistrement terminé",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
+        }
+        catch (ArgumentException ex)
+        {
+            MessageBox.Show(
+                ex.Message,
+                "Valeur incorrecte",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
         }
         catch (UnauthorizedAccessException)
         {
@@ -192,5 +199,76 @@ public partial class MainForm : Form
         grpBadges.Enabled = false;
 
         ResetDisplayedValues();
+    }
+
+    private void DisplaySaveData(Gen1SaveFile saveFile)
+    {
+        txtPlayerName.Text = saveFile.PlayerName;
+        txtRivalName.Text = saveFile.RivalName;
+        numMoney.Value = saveFile.Money;
+        txtPlayTime.Text = saveFile.FormattedPlayTime;
+
+        CheckBox[] badgeCheckBoxes = grpBadges.Controls
+            .OfType<CheckBox>()
+            .OrderBy(checkBox => checkBox.Top)
+            .ToArray();
+
+        for (int index = 0;
+             index < badgeCheckBoxes.Length && index < 8;
+             index++)
+        {
+            badgeCheckBoxes[index].Checked =
+                saveFile.HasBadge(index);
+        }
+
+        tslStatus.Text =
+            $"Sauvegarde valide — checksum 0x{saveFile.StoredChecksum:X2}";
+    }
+    private void SetEditorEnabled(bool enabled)
+    {
+        grpTrainer.Enabled = enabled;
+        grpBadges.Enabled = enabled;
+        btnSaveAs.Enabled = enabled;
+
+        cmbGameVersion.Enabled = enabled;
+        txtPlayerName.Enabled = enabled;
+        txtRivalName.Enabled = enabled;
+        numMoney.Enabled = enabled;
+
+        foreach (CheckBox checkBox in
+                 grpBadges.Controls.OfType<CheckBox>())
+        {
+            checkBox.Enabled = enabled;
+        }
+
+        // Le temps de jeu reste affiché, mais non modifiable pour le moment.
+        txtPlayTime.Enabled = true;
+        txtPlayTime.ReadOnly = true;
+    }
+    private void ApplyInterfaceChanges()
+    {
+        if (_currentSave is null)
+            throw new InvalidOperationException(
+                "Aucune sauvegarde n'est chargée.");
+
+        _currentSave.SetPlayerName(txtPlayerName.Text);
+        _currentSave.SetRivalName(txtRivalName.Text);
+        _currentSave.SetMoney((int)numMoney.Value);
+
+        CheckBox[] badgeCheckBoxes = grpBadges.Controls
+            .OfType<CheckBox>()
+            .OrderBy(checkBox => checkBox.Top)
+            .ToArray();
+
+        for (int index = 0;
+             index < badgeCheckBoxes.Length && index < 8;
+             index++)
+        {
+            _currentSave.SetBadge(
+                index,
+                badgeCheckBoxes[index].Checked);
+        }
+
+        _currentSave.UpdateChecksum();
     }
 }
