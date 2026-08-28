@@ -11,10 +11,9 @@ public partial class MainForm : Form
     public MainForm()
     {
         InitializeComponent();
-
         InitializeInterface();
     }
-
+    
     private void InitializeInterface()
     {
         cmbGameVersion.Items.Clear();
