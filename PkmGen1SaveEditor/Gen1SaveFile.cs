@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Globalization;
 using System.Text;
 
 namespace PkmGen1SaveEditor;
@@ -739,4 +740,158 @@ internal sealed class Gen1SaveFile
             lastElementOffset,
             elementSize);
     }
+
+    public int PartyCount => Data[PartyCountOffset];
+
+    public bool CanAddPartyPokemon => PartyCount < MaximumPartySize;
+
+    public void AddPartyPokemon(
+        byte speciesId,
+        byte level,
+        string? nickname = null)
+    {
+        int pokemonCount = PartyCount;
+
+        if (pokemonCount >= MaximumPartySize)
+        {
+            throw new InvalidOperationException(
+                "L'équipe contient déjà six Pokémon.");
+        }
+
+        string speciesName = Gen1SpeciesCatalog.GetName(speciesId);
+
+        if (speciesName.StartsWith("Inconnu", StringComparison.Ordinal) ||
+            speciesId == 0)
+        {
+            throw new ArgumentException(
+                "L'espèce sélectionnée est invalide.",
+                nameof(speciesId));
+        }
+
+        if (level is < 1 or > 100)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(level),
+                "Le niveau doit être compris entre 1 et 100.");
+        }
+
+        int pokemonOffset =
+            PartyPokemonDataOffset +
+            pokemonCount * PartyPokemonSize;
+
+        Array.Fill(
+            Data,
+            (byte)0x00,
+            pokemonOffset,
+            PartyPokemonSize);
+
+        Data[PartySpeciesListOffset + pokemonCount] = speciesId;
+        Data[PartySpeciesListOffset + pokemonCount + 1] = 0xFF;
+        Data[pokemonOffset] = speciesId;
+
+        ushort generatedStat =
+            (ushort)Math.Clamp(level * 2 + 10, 1, ushort.MaxValue);
+
+        ushort generatedHp =
+            (ushort)Math.Clamp(level * 2 + 15, 1, ushort.MaxValue);
+
+        WriteBigEndianUInt16(pokemonOffset + 1, generatedHp);
+        Data[pokemonOffset + 3] = level;
+
+        // Type Normal et taux de capture neutre. Ces champs sont
+        // valides pour le moteur et pourront être enrichis par le catalogue.
+        Data[pokemonOffset + 5] = 0x00;
+        Data[pokemonOffset + 6] = 0x00;
+        Data[pokemonOffset + 7] = 45;
+
+        // Charge, 35 PP : garantit au nouveau Pokémon une attaque utilisable.
+        Data[pokemonOffset + 8] = 0x21;
+        Data[pokemonOffset + 29] = 35;
+
+        WriteBigEndianUInt16(
+            pokemonOffset + 12,
+            ReadBigEndianUInt16(0x2605));
+
+        uint experience =
+            (uint)level * level * level;
+
+        WriteBigEndianUInt24(
+            pokemonOffset + 14,
+            Math.Min(experience, 0xFFFFFF));
+
+        Data[pokemonOffset + 27] = 0x88;
+        Data[pokemonOffset + 28] = 0x88;
+        Data[pokemonOffset + 33] = level;
+
+        WriteBigEndianUInt16(pokemonOffset + 34, generatedHp);
+        WriteBigEndianUInt16(pokemonOffset + 36, generatedStat);
+        WriteBigEndianUInt16(pokemonOffset + 38, generatedStat);
+        WriteBigEndianUInt16(pokemonOffset + 40, generatedStat);
+        WriteBigEndianUInt16(pokemonOffset + 42, generatedStat);
+
+        int otNameOffset =
+            PartyOtNamesOffset +
+            pokemonCount * PartyNameSize;
+
+        Array.Copy(
+            Data,
+            PlayerNameOffset,
+            Data,
+            otNameOffset,
+            PartyNameSize);
+
+        string displayedNickname =
+            string.IsNullOrWhiteSpace(nickname)
+                ? MakeEncodablePokemonName(speciesName)
+                : nickname.Trim();
+
+        EncodeText(
+            PartyNicknamesOffset +
+            pokemonCount * PartyNameSize,
+            PartyNameSize,
+            displayedNickname);
+
+        Data[PartyCountOffset] = (byte)(pokemonCount + 1);
+        UpdateChecksum();
+    }
+
+    private static string MakeEncodablePokemonName(string name)
+    {
+        string normalized = name
+            .Normalize(NormalizationForm.FormD);
+
+        StringBuilder result = new();
+
+        foreach (char character in normalized)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(character) ==
+                UnicodeCategory.NonSpacingMark)
+            {
+                continue;
+            }
+
+            char simplified = character switch
+            {
+                '♀' => 'F',
+                '♂' => 'M',
+                _ => character
+            };
+
+            if (simplified is >= 'A' and <= 'Z' ||
+                simplified is >= 'a' and <= 'z' ||
+                simplified is >= '0' and <= '9' ||
+                simplified is ' ' or '-' or '\'' or '.' or '!' or '?')
+            {
+                result.Append(simplified);
+            }
+
+            if (result.Length == PartyNameSize - 1)
+                break;
+        }
+
+        return result.Length == 0
+            ? "POKEMON"
+            : result.ToString();
+    }
+
 }
