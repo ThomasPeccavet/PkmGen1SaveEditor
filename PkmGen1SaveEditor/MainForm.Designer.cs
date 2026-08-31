@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             pnlToolbar = new Panel();
             lblCurrentFile = new Label();
             btnSaveAs = new Button();
@@ -348,6 +349,7 @@
             Controls.Add(grpBadges);
             Controls.Add(grpTrainer);
             Controls.Add(pnlToolbar);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MinimumSize = new Size(750, 450);
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
