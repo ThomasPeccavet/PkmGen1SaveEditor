@@ -5,7 +5,7 @@
 **A lightweight Windows save editor for Pokémon Red and Pokémon Blue.**
 
 Open, validate, edit and export Generation I Game Boy save files through a simple Windows interface.
-<img width="1254" height="1254" alt="PkmnGen1Save" src="https://github.com/ThomasPeccavet/PkmGen1SaveEditor/blob/master/PkmGen1SaveEditor/Assets/PkmnGen1Save.png" />
+<img width="940" height="940" alt="PkmnGen1Save" src="https://github.com/ThomasPeccavet/PkmGen1SaveEditor/blob/master/PkmGen1SaveEditor/asset/PkmnGen1Save.png" />
 <br>
 
 <a href="https://github.com/ThomasPeccavet/PkmGen1SaveEditor">
