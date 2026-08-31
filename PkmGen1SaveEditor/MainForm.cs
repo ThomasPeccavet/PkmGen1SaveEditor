@@ -13,7 +13,7 @@ public partial class MainForm : Form
         InitializeComponent();
         InitializeInterface();
     }
-    
+
     private void InitializeInterface()
     {
         cmbGameVersion.Items.Clear();
@@ -59,6 +59,7 @@ public partial class MainForm : Form
 
             tslStatus.Text =
                 $"Sauvegarde valide — checksum 0x{saveFile.StoredChecksum:X2}";
+            btnViewParty.Enabled = true;
         }
         catch (InvalidDataException ex)
         {
@@ -134,6 +135,7 @@ public partial class MainForm : Form
         try
         {
             ApplyInterfaceChanges();
+            _currentSave.UpdateChecksum();
             File.WriteAllBytes(dialog.FileName, _currentSave.Data);
 
             tslStatus.Text =
@@ -269,5 +271,24 @@ public partial class MainForm : Form
         }
 
         _currentSave.UpdateChecksum();
+    }
+
+    private void btnViewParty_Click(
+        object sender,
+        EventArgs e)
+    {
+        if (_currentSave is null)
+        {
+            MessageBox.Show(
+                "Ouvrez d'abord une sauvegarde.",
+                "Aucune sauvegarde",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+
+            return;
+        }
+
+        using TeamForm teamForm = new(_currentSave);
+        teamForm.ShowDialog(this);
     }
 }

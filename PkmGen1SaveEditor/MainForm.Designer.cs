@@ -56,6 +56,7 @@
             chkBadgeThunder = new CheckBox();
             chkBadgeCascade = new CheckBox();
             chkBadgeBoulder = new CheckBox();
+            btnViewParty = new Button();
             pnlToolbar.SuspendLayout();
             statusStrip1.SuspendLayout();
             grpTrainer.SuspendLayout();
@@ -108,7 +109,7 @@
             // 
             statusStrip1.ImageScalingSize = new Size(20, 20);
             statusStrip1.Items.AddRange(new ToolStripItem[] { tslStatus, tslVersion });
-            statusStrip1.Location = new Point(0, 377);
+            statusStrip1.Location = new Point(0, 430);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Size = new Size(882, 26);
             statusStrip1.TabIndex = 3;
@@ -349,12 +350,24 @@
             chkBadgeBoulder.Text = "Roche";
             chkBadgeBoulder.UseVisualStyleBackColor = true;
             // 
+            // btnViewParty
+            // 
+            btnViewParty.Enabled = false;
+            btnViewParty.Location = new Point(23, 379);
+            btnViewParty.Name = "btnViewParty";
+            btnViewParty.Size = new Size(221, 29);
+            btnViewParty.TabIndex = 6;
+            btnViewParty.Text = "Voir l'équipe";
+            btnViewParty.UseVisualStyleBackColor = true;
+            btnViewParty.Click += btnViewParty_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.WhiteSmoke;
-            ClientSize = new Size(882, 403);
+            ClientSize = new Size(882, 456);
+            Controls.Add(btnViewParty);
             Controls.Add(grpBadges);
             Controls.Add(grpTrainer);
             Controls.Add(statusStrip1);
@@ -406,5 +419,6 @@
         private CheckBox chkBadgeThunder;
         private CheckBox chkBadgeCascade;
         private CheckBox chkBadgeBoulder;
+        private Button btnViewParty;
     }
 }
