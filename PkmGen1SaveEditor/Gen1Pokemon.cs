@@ -6,6 +6,14 @@ internal sealed class Gen1Pokemon
 
     public byte SpeciesId { get; init; }
 
+    public byte Type1 { get; init; }
+
+    public byte Type2 { get; init; }
+
+    public int? BoxNumber { get; init; }
+
+    public bool IsInParty => BoxNumber is null;
+
     public string Nickname { get; init; } = string.Empty;
 
     public byte Level { get; init; }
@@ -33,6 +41,15 @@ internal sealed class Gen1Pokemon
 
     public string SpeciesName =>
         Gen1SpeciesCatalog.GetName(SpeciesId);
+
+    public string Types => Type1 == Type2
+        ? Gen1TypeCatalog.GetName(Type1)
+        : $"{Gen1TypeCatalog.GetName(Type1)} / {Gen1TypeCatalog.GetName(Type2)}";
+
+    public string MovesSummary => string.Join(
+        ", ",
+        Moves.Where(move => !move.IsEmpty)
+            .Select(move => Gen1MoveCatalog.GetName(move.MoveId)));
 
     public override string ToString()
     {
