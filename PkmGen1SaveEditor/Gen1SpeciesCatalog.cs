@@ -178,4 +178,24 @@ internal static class Gen1SpeciesCatalog
             _ => $"Inconnu (0x{speciesId:X2})"
         };
     }
+
+    public static IReadOnlyList<(byte Id, string Name)> GetAll()
+    {
+        List<(byte Id, string Name)> species = [];
+
+        for (int rawId = 1; rawId <= byte.MaxValue; rawId++)
+        {
+            byte id = (byte)rawId;
+            string name = GetName(id);
+
+            if (!name.StartsWith("Inconnu", StringComparison.Ordinal))
+            {
+                species.Add((id, name));
+            }
+        }
+
+        return species
+            .OrderBy(entry => entry.Name, StringComparer.CurrentCulture)
+            .ToArray();
+    }
 }

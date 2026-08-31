@@ -17,6 +17,7 @@ internal partial class TeamForm : Form
     private readonly Label _informationLabel = new();
     private readonly Button _closeButton = new();
     private readonly Button _deleteButton = new();
+    private readonly Button _addButton = new();
 
     internal TeamForm(Gen1SaveFile saveFile)
     {
@@ -76,10 +77,23 @@ internal partial class TeamForm : Form
             20,
             ClientSize.Height - _deleteButton.Height - 18);
 
+        _addButton.Location = new Point(
+            _deleteButton.Right + 10,
+            _deleteButton.Top);
+
         _deleteButton.Enabled = false;
         _deleteButton.Click += DeleteButton_Click;
 
+        _addButton.Text = "Ajouter";
+        _addButton.Size = new Size(110, 32);
+        _addButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+        _addButton.Location = new Point(
+            _deleteButton.Right + 10,
+            _deleteButton.Top);
+        _addButton.Click += AddButton_Click;
+
         Controls.Add(_deleteButton);
+        Controls.Add(_addButton);
 
         Controls.Add(_titleLabel);
         Controls.Add(_informationLabel);
@@ -201,6 +215,8 @@ internal partial class TeamForm : Form
             _partyGrid.Rows[rowIndex].Tag = pokemon;
         }
 
+        _addButton.Enabled = party.Count < 6;
+
         _informationLabel.Text = party.Count switch
         {
             0 => "Aucun Pokémon trouvé dans l’équipe.",
@@ -313,4 +329,43 @@ internal partial class TeamForm : Form
                 MessageBoxIcon.Error);
         }
     }
+
+    private void AddButton_Click(
+        object? sender,
+        EventArgs e)
+    {
+        if (!_saveFile.CanAddPartyPokemon)
+        {
+            MessageBox.Show(
+                "L'équipe contient déjà six Pokémon.",
+                "Équipe complète",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+            return;
+        }
+
+        using AddPokemonForm form = new();
+
+        if (form.ShowDialog(this) != DialogResult.OK)
+            return;
+
+        try
+        {
+            _saveFile.AddPartyPokemon(
+                form.SelectedSpeciesId,
+                form.SelectedLevel,
+                form.SelectedNickname);
+
+            LoadParty();
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(
+                exception.Message,
+                "Ajout impossible",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+    }
+
 }
