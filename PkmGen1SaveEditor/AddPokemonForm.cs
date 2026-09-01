@@ -29,19 +29,31 @@ internal sealed class AddPokemonForm : Form
     {
         Text = title;
         StartPosition = FormStartPosition.CenterParent;
-        ClientSize = new Size(430, 245);
+        ClientSize = new Size(480, 320);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
-        BackColor = Color.FromArgb(232, 239, 199);
-        Font = new Font("Segoe UI", 9F);
+        PokemonTheme.Apply(this);
+
+        TableLayoutPanel root = new()
+        {
+            Dock = DockStyle.Fill,
+            Padding = new Padding(16),
+            ColumnCount = 1,
+            RowCount = 2
+        };
+
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+
+        PokemonGroupBox group =
+            PokemonTheme.CreateGroup("INFORMATIONS DU POKÉMON");
 
         TableLayoutPanel layout = new()
         {
             Dock = DockStyle.Fill,
-            Padding = new Padding(20),
             ColumnCount = 2,
-            RowCount = 4
+            RowCount = 3
         };
 
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
@@ -49,7 +61,6 @@ internal sealed class AddPokemonForm : Form
         layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));
         layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));
         layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
         _speciesInput.DropDownStyle = ComboBoxStyle.DropDownList;
         _speciesInput.Dock = DockStyle.Fill;
@@ -102,12 +113,14 @@ internal sealed class AddPokemonForm : Form
 
         buttons.Controls.Add(addButton);
         buttons.Controls.Add(cancelButton);
-        layout.Controls.Add(buttons, 0, 3);
-        layout.SetColumnSpan(buttons, 2);
+        group.Controls.Add(layout);
+        root.Controls.Add(group, 0, 0);
+        root.Controls.Add(buttons, 0, 1);
 
         AcceptButton = addButton;
         CancelButton = cancelButton;
-        Controls.Add(layout);
+        Controls.Add(root);
+        PokemonTheme.StyleDescendants(this);
     }
 
     private static Label CreateLabel(string text) => new()

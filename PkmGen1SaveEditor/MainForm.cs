@@ -16,6 +16,8 @@ public partial class MainForm : Form
 
     private void InitializeInterface()
     {
+        PokemonTheme.Apply(this);
+
         cmbGameVersion.Items.Clear();
         cmbGameVersion.Items.Add("Pokémon Rouge / Bleu — Français");
         cmbGameVersion.Items.Add("Pokémon Red / Blue — English");
