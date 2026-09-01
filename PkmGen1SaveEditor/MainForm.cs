@@ -7,6 +7,8 @@ namespace PkmGen1SaveEditor;
 public partial class MainForm : Form
 {
     private Gen1SaveFile? _currentSave;
+    private readonly Button _inventoryButton = new();
+    private readonly Button _pokedexButton = new();
 
     public MainForm()
     {
@@ -62,7 +64,7 @@ public partial class MainForm : Form
         };
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 122F));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 68F));
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 28F));
 
         root.Controls.Add(CreateModernHeader(), 0, 0);
@@ -223,13 +225,15 @@ public partial class MainForm : Form
         btnViewParty.Tag = "primary";
         actions.Controls.Add(btnViewParty);
 
-        actions.Controls.Add(new Label
-        {
-            Text = "Les modifications sont enregistrées uniquement lors de l’export.",
-            AutoSize = true,
-            ForeColor = ModernTheme.MutedTextColor,
-            Padding = new Padding(16, 10, 0, 0)
-        });
+        _inventoryButton.Text = "Gérer l’inventaire";
+        _inventoryButton.AutoSize = true;
+        _inventoryButton.Click += InventoryButton_Click;
+        actions.Controls.Add(_inventoryButton);
+
+        _pokedexButton.Text = "Gérer le Pokédex";
+        _pokedexButton.AutoSize = true;
+        _pokedexButton.Click += PokedexButton_Click;
+        actions.Controls.Add(_pokedexButton);
         return actions;
     }
 
@@ -445,6 +449,8 @@ public partial class MainForm : Form
     {
         btnSaveAs.Enabled = enabled;
         btnViewParty.Enabled = enabled;
+        _inventoryButton.Enabled = enabled;
+        _pokedexButton.Enabled = enabled;
 
         cmbGameVersion.Enabled = enabled;
         txtPlayerName.Enabled = enabled;
@@ -499,5 +505,48 @@ public partial class MainForm : Form
 
         using TeamForm teamForm = new(_currentSave);
         teamForm.ShowDialog(this);
+    }
+
+    private void InventoryButton_Click(object? sender, EventArgs e)
+    {
+        if (_currentSave is null)
+        {
+            MessageBox.Show(
+                "Ouvrez d’abord une sauvegarde.",
+                "Aucune sauvegarde",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+            return;
+        }
+
+        // Conserve la valeur éventuellement modifiée dans la fenêtre principale
+        // avant d’ouvrir l’éditeur d’inventaire.
+        _currentSave.SetMoney(decimal.ToInt32(numMoney.Value));
+
+        using InventoryForm inventoryForm = new(_currentSave);
+        if (inventoryForm.ShowDialog(this) == DialogResult.OK)
+        {
+            numMoney.Value = _currentSave.Money;
+            tslStatus.Text = "Inventaire modifié en mémoire — exportez pour enregistrer.";
+        }
+    }
+
+    private void PokedexButton_Click(object? sender, EventArgs e)
+    {
+        if (_currentSave is null)
+        {
+            MessageBox.Show(
+                "Ouvrez d’abord une sauvegarde.",
+                "Aucune sauvegarde",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+            return;
+        }
+
+        using PokedexForm pokedexForm = new(_currentSave);
+        if (pokedexForm.ShowDialog(this) == DialogResult.OK)
+        {
+            tslStatus.Text = "Pokédex modifié en mémoire — exportez pour enregistrer.";
+        }
     }
 }
