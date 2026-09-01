@@ -78,16 +78,42 @@ internal partial class TeamForm : Form
     {
         SplitContainer split = new()
         {
-            Dock = DockStyle.Fill,
-            SplitterDistance = 580,
-            Panel1MinSize = 470,
-            Panel2MinSize = 470
+            Dock = DockStyle.Fill
         };
+
+        split.SizeChanged += (_, _) => ConfigureStorageSplitter(split);
         split.Panel1.Padding = new Padding(0, 0, 8, 0);
         split.Panel2.Padding = new Padding(8, 0, 0, 0);
         split.Panel1.Controls.Add(BuildPartyPanel());
         split.Panel2.Controls.Add(BuildBoxPanel());
         return split;
+    }
+
+    private static void ConfigureStorageSplitter(SplitContainer split)
+    {
+        const int desiredPanelMinimum = 470;
+        int availableWidth = split.ClientSize.Width - split.SplitterWidth;
+
+        // Pendant la construction du formulaire, le contrôle possède encore
+        // sa petite largeur par défaut. On attend sa taille réellement allouée.
+        if (availableWidth < desiredPanelMinimum * 2)
+            return;
+
+        int centeredDistance = availableWidth / 2;
+
+        // La distance doit d'abord devenir compatible avec les futures
+        // tailles minimales, sinon les setters peuvent eux-mêmes échouer.
+        split.SplitterDistance = centeredDistance;
+        split.Panel1MinSize = desiredPanelMinimum;
+        split.Panel2MinSize = desiredPanelMinimum;
+
+        int maximumDistance =
+            split.ClientSize.Width - split.Panel2MinSize - split.SplitterWidth;
+
+        split.SplitterDistance = Math.Clamp(
+            centeredDistance,
+            split.Panel1MinSize,
+            maximumDistance);
     }
 
     private Control BuildPartyPanel()
