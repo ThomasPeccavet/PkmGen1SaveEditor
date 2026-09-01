@@ -112,7 +112,7 @@ internal sealed class AddPokemonForm : Form
         buttons.Controls.Add(addButton);
         buttons.Controls.Add(cancelButton);
         root.Controls.Add(ModernTheme.CreateCard(
-            "Nouveau Pokémon",
+            title,
             "Choisissez l’espèce et le niveau. Le surnom est facultatif.",
             layout), 0, 0);
         root.Controls.Add(buttons, 0, 1);

@@ -74,6 +74,12 @@ public partial class MainForm : Form
         root.Controls.Add(statusStrip1, 0, 3);
         Controls.Add(root);
 
+        // Les anciens conteneurs du Designer ne sont plus affichés.
+        // Leurs contrôles utiles ont été replacés dans la nouvelle interface.
+        pnlToolbar.Dispose();
+        grpTrainer.Dispose();
+        grpBadges.Dispose();
+
         ModernTheme.StyleTree(this);
         ResumeLayout(performLayout: true);
     }
@@ -411,7 +417,7 @@ public partial class MainForm : Form
         lblCurrentFile.Text = "Aucun fichier chargé";
         tslStatus.Text = "Aucune sauvegarde compatible chargée";
 
-        btnSaveAs.Enabled = false;
+        SetEditorEnabled(false);
         ResetDisplayedValues();
     }
 
@@ -438,6 +444,7 @@ public partial class MainForm : Form
     private void SetEditorEnabled(bool enabled)
     {
         btnSaveAs.Enabled = enabled;
+        btnViewParty.Enabled = enabled;
 
         cmbGameVersion.Enabled = enabled;
         txtPlayerName.Enabled = enabled;
