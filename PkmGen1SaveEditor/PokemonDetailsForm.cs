@@ -400,11 +400,10 @@ internal sealed class PokemonDetailsForm : Form
             AutoSize = true,
             Dock = DockStyle.Fill,
             Text = text,
-            Font = bold
-                ? new Font(
-                    SystemFonts.MessageBoxFont,
-                    FontStyle.Bold)
-                : SystemFonts.MessageBoxFont,
+            Font = new Font(
+                "Segoe UI",
+                9F,
+                bold ? FontStyle.Bold : FontStyle.Regular),
             TextAlign = ContentAlignment.MiddleLeft,
             Margin = new Padding(4)
         };

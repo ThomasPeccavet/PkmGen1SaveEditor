@@ -23,9 +23,11 @@ internal sealed class AddPokemonForm : Form
             ? null
             : _nicknameInput.Text.Trim();
 
-    internal AddPokemonForm()
+    internal AddPokemonForm(
+        string title = "Ajouter un Pokémon",
+        string confirmText = "Ajouter")
     {
-        Text = "Ajouter un Pokémon";
+        Text = title;
         StartPosition = FormStartPosition.CenterParent;
         ClientSize = new Size(430, 245);
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -86,7 +88,7 @@ internal sealed class AddPokemonForm : Form
 
         Button addButton = new()
         {
-            Text = "Ajouter",
+            Text = confirmText,
             DialogResult = DialogResult.OK,
             Size = new Size(100, 32)
         };

@@ -1,371 +1,437 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
-using System.Windows.Forms;
-
 namespace PkmGen1SaveEditor;
 
 internal partial class TeamForm : Form
 {
-    private readonly Gen1SaveFile _saveFile;
+    private readonly Gen1SaveFile _save;
+    private readonly DataGridView _party = NewGrid();
+    private readonly DataGridView _box = NewGrid();
+    private readonly ComboBox _boxChoice = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 190 };
+    private readonly TextBox _search = new() { Width = 220, PlaceholderText = "Nom, type ou attaque…" };
+    private readonly Label _partyInfo = new() { AutoSize = true, ForeColor = Color.DimGray };
+    private readonly Label _boxInfo = new() { AutoSize = true, ForeColor = Color.DimGray };
+    private readonly Label _selectedInfo = new() { AutoSize = true, ForeColor = Color.DimGray };
+    private readonly PictureBox _sprite = new()
+    {
+        Size = new Size(78, 78),
+        SizeMode = PictureBoxSizeMode.Zoom,
+        BackColor = Color.FromArgb(216, 226, 179),
+        BorderStyle = BorderStyle.FixedSingle
+    };
 
-    private readonly DataGridView _partyGrid = new();
-    private readonly Label _titleLabel = new();
-    private readonly Label _informationLabel = new();
-    private readonly Button _closeButton = new();
-    private readonly Button _deleteButton = new();
-    private readonly Button _addButton = new();
+    private readonly Dictionary<string, Button> _buttons = [];
+    private byte _requestedSpriteSpecies;
 
     internal TeamForm(Gen1SaveFile saveFile)
     {
-        _saveFile = saveFile
-            ?? throw new ArgumentNullException(nameof(saveFile));
-
-        InitializeInterface();
-        LoadParty();
+        _save = saveFile ?? throw new ArgumentNullException(nameof(saveFile));
+        BuildInterface();
+        LoadEverything();
     }
 
-    private void InitializeInterface()
+    private void BuildInterface()
     {
-        Text = "Équipe Pokémon";
+        Text = "Équipe et boîtes PC";
         StartPosition = FormStartPosition.CenterParent;
-        ClientSize = new Size(760, 390);
-        MinimumSize = new Size(680, 360);
-
+        ClientSize = new Size(1220, 690);
+        MinimumSize = new Size(1050, 600);
         BackColor = Color.FromArgb(232, 239, 199);
         ForeColor = Color.FromArgb(26, 39, 27);
         Font = new Font("Segoe UI", 9F);
 
-        _titleLabel.Text = "ÉQUIPE POKÉMON";
-        _titleLabel.Font = new Font(
-            Font.FontFamily,
-            14F,
-            FontStyle.Bold);
+        TableLayoutPanel root = new()
+        {
+            Dock = DockStyle.Fill,
+            Padding = new Padding(16),
+            RowCount = 3,
+            ColumnCount = 1
+        };
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 86));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
 
-        _titleLabel.AutoSize = true;
-        _titleLabel.Location = new Point(20, 18);
+        root.Controls.Add(BuildHeader(), 0, 0);
+        root.Controls.Add(BuildStorage(), 0, 1);
+        root.Controls.Add(BuildFooter(), 0, 2);
+        Controls.Add(root);
+    }
 
-        _informationLabel.AutoSize = true;
-        _informationLabel.Location = new Point(22, 53);
-        _informationLabel.ForeColor = Color.DimGray;
+    private Control BuildHeader()
+    {
+        Panel panel = new() { Dock = DockStyle.Fill };
+        panel.Controls.Add(new Label
+        {
+            Text = "GESTION DES POKÉMON",
+            AutoSize = true,
+            Location = new Point(4, 4),
+            Font = new Font(Font.FontFamily, 16, FontStyle.Bold)
+        });
+        _selectedInfo.Location = new Point(6, 44);
+        _selectedInfo.Text = "Sélectionnez un Pokémon pour afficher ses informations.";
+        _sprite.Location = new Point(ClientSize.Width - 120, 0);
+        _sprite.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        panel.Controls.Add(_selectedInfo);
+        panel.Controls.Add(_sprite);
+        return panel;
+    }
 
+    private Control BuildStorage()
+    {
+        SplitContainer split = new()
+        {
+            Dock = DockStyle.Fill,
+            SplitterDistance = 580,
+            Panel1MinSize = 470,
+            Panel2MinSize = 470
+        };
+        split.Panel1.Padding = new Padding(0, 0, 8, 0);
+        split.Panel2.Padding = new Padding(8, 0, 0, 0);
+        split.Panel1.Controls.Add(BuildPartyPanel());
+        split.Panel2.Controls.Add(BuildBoxPanel());
+        return split;
+    }
+
+    private Control BuildPartyPanel()
+    {
         ConfigurePartyGrid();
+        GroupBox group = NewGroup("ÉQUIPE");
+        TableLayoutPanel layout = NewSectionLayout(3, 28, 78);
 
-        _closeButton.Text = "Fermer";
-        _closeButton.Size = new Size(110, 32);
-        _closeButton.Anchor =
-            AnchorStyles.Bottom |
-            AnchorStyles.Right;
+        FlowLayoutPanel actions = NewActions();
+        AddAction(actions, "add", "Ajouter", AddPokemon);
+        AddAction(actions, "replace", "Remplacer", ReplacePokemon);
+        AddAction(actions, "delete", "Supprimer", DeletePokemon);
+        AddAction(actions, "up", "Monter", (_, _) => ReorderParty(-1));
+        AddAction(actions, "down", "Descendre", (_, _) => ReorderParty(1));
+        AddAction(actions, "duplicate", "Dupliquer", DuplicatePokemon);
+        AddAction(actions, "heal", "Soigner tout", (_, _) => Run(_save.HealParty, "Soin impossible"));
+        AddAction(actions, "deposit", "Déposer →", DepositPokemon);
 
-        _closeButton.Location = new Point(
-            ClientSize.Width - _closeButton.Width - 20,
-            ClientSize.Height - _closeButton.Height - 18);
+        layout.Controls.Add(_partyInfo, 0, 0);
+        layout.Controls.Add(_party, 0, 1);
+        layout.Controls.Add(actions, 0, 2);
+        group.Controls.Add(layout);
+        return group;
+    }
 
-        _closeButton.Click += (_, _) => Close();
+    private Control BuildBoxPanel()
+    {
+        ConfigureBoxGrid();
+        GroupBox group = NewGroup("BOÎTES PC");
+        TableLayoutPanel layout = NewSectionLayout(4, 38, 28, 78);
+        FlowLayoutPanel filters = NewActions();
+        filters.WrapContents = false;
+        filters.Controls.Add(new Label { Text = "Boîte :", AutoSize = true, Padding = new Padding(0, 7, 2, 0) });
+        filters.Controls.Add(_boxChoice);
+        filters.Controls.Add(_search);
 
-        _deleteButton.Text = "Supprimer";
-        _deleteButton.Size = new Size(110, 32);
+        _boxChoice.SelectedIndexChanged += (_, _) => LoadBox();
+        _search.TextChanged += (_, _) => LoadBox();
 
-        _deleteButton.Anchor =
-            AnchorStyles.Bottom |
-            AnchorStyles.Left;
+        FlowLayoutPanel actions = NewActions();
+        AddAction(actions, "boxAdd", "Ajouter au PC", AddBoxPokemon);
+        AddAction(actions, "boxDelete", "Supprimer", DeleteBoxPokemon);
+        AddAction(actions, "withdraw", "← Retirer", WithdrawPokemon);
+        AddAction(actions, "boxMove", "Déplacer", MoveBoxPokemon);
 
-        _deleteButton.Location = new Point(
-            20,
-            ClientSize.Height - _deleteButton.Height - 18);
+        layout.Controls.Add(filters, 0, 0);
+        layout.Controls.Add(_boxInfo, 0, 1);
+        layout.Controls.Add(_box, 0, 2);
+        layout.Controls.Add(actions, 0, 3);
+        group.Controls.Add(layout);
+        return group;
+    }
 
-        _addButton.Location = new Point(
-            _deleteButton.Right + 10,
-            _deleteButton.Top);
-
-        _deleteButton.Enabled = false;
-        _deleteButton.Click += DeleteButton_Click;
-
-        _addButton.Text = "Ajouter";
-        _addButton.Size = new Size(110, 32);
-        _addButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-        _addButton.Location = new Point(
-            _deleteButton.Right + 10,
-            _deleteButton.Top);
-        _addButton.Click += AddButton_Click;
-
-        Controls.Add(_deleteButton);
-        Controls.Add(_addButton);
-
-        Controls.Add(_titleLabel);
-        Controls.Add(_informationLabel);
-        Controls.Add(_partyGrid);
-        Controls.Add(_closeButton);
-
-        Resize += TeamForm_Resize;
-
+    private Control BuildFooter()
+    {
+        FlowLayoutPanel footer = NewActions();
+        footer.FlowDirection = FlowDirection.RightToLeft;
+        footer.Padding = new Padding(0, 6, 0, 0);
+        Button close = NewButton("Fermer");
+        close.Click += (_, _) => Close();
+        footer.Controls.Add(close);
+        return footer;
     }
 
     private void ConfigurePartyGrid()
     {
-        _partyGrid.Location = new Point(20, 80);
-        _partyGrid.Size = new Size(
-            ClientSize.Width - 40,
-            ClientSize.Height - 145);
+        AddColumns(_party,
+            ("N°", 35), ("Surnom", 85), ("Espèce", 85), ("Type(s)", 90),
+            ("Niv.", 42), ("PV", 70), ("Statut", 55), ("Attaques", 150));
+        _party.SelectionChanged += (_, _) => SelectionChanged(PartySelection());
+        _party.CellDoubleClick += PartyDoubleClick;
+    }
 
-        _partyGrid.Anchor =
-            AnchorStyles.Top |
-            AnchorStyles.Bottom |
-            AnchorStyles.Left |
-            AnchorStyles.Right;
+    private void ConfigureBoxGrid()
+    {
+        AddColumns(_box,
+            ("N°", 35), ("Surnom", 85), ("Espèce", 80), ("Type(s)", 90),
+            ("Niv.", 42), ("Statut", 55), ("Attaques", 150), ("ID OT", 55));
+        _box.SelectionChanged += (_, _) => SelectionChanged(BoxSelection());
+    }
 
-        _partyGrid.AllowUserToAddRows = false;
-        _partyGrid.AllowUserToDeleteRows = false;
-        _partyGrid.AllowUserToResizeRows = false;
-        _partyGrid.MultiSelect = false;
-        _partyGrid.ReadOnly = true;
-        _partyGrid.RowHeadersVisible = false;
-        _partyGrid.SelectionMode =
-            DataGridViewSelectionMode.FullRowSelect;
-
-        _partyGrid.AutoSizeColumnsMode =
-            DataGridViewAutoSizeColumnsMode.Fill;
-
-        _partyGrid.BackgroundColor = BackColor;
-        _partyGrid.BorderStyle = BorderStyle.FixedSingle;
-
-        _partyGrid.ColumnHeadersDefaultCellStyle.BackColor =
-            Color.FromArgb(26, 39, 27);
-
-        _partyGrid.ColumnHeadersDefaultCellStyle.ForeColor =
-            Color.White;
-
-        _partyGrid.ColumnHeadersDefaultCellStyle.Font =
-            new Font(Font, FontStyle.Bold);
-
-        _partyGrid.EnableHeadersVisualStyles = false;
-
-        _partyGrid.Columns.Add(
-            new DataGridViewTextBoxColumn
-            {
-                Name = "Slot",
-                HeaderText = "N°",
-                FillWeight = 35
-            });
-
-        _partyGrid.Columns.Add(
-            new DataGridViewTextBoxColumn
-            {
-                Name = "Nickname",
-                HeaderText = "Surnom",
-                FillWeight = 120
-            });
-
-        _partyGrid.Columns.Add(
-            new DataGridViewTextBoxColumn
-            {
-                Name = "Species",
-                HeaderText = "Espèce",
-                FillWeight = 90
-            });
-
-        _partyGrid.Columns.Add(
-            new DataGridViewTextBoxColumn
-            {
-                Name = "Level",
-                HeaderText = "Niveau",
-                FillWeight = 65
-            });
-
-        _partyGrid.Columns.Add(
-            new DataGridViewTextBoxColumn
-            {
-                Name = "Hp",
-                HeaderText = "PV",
-                FillWeight = 90
-            });
-
-        _partyGrid.Columns.Add(
-            new DataGridViewTextBoxColumn
-            {
-                Name = "Status",
-                HeaderText = "Statut",
-                FillWeight = 90
-            });
-
-        _partyGrid.CellDoubleClick += PartyGrid_CellDoubleClick;
-        _partyGrid.SelectionChanged += PartyGrid_SelectionChanged;
+    private void LoadEverything()
+    {
+        int selectedBox = SelectedBox;
+        IReadOnlyList<int> counts = _save.ReadBoxCounts();
+        _boxChoice.BeginUpdate();
+        _boxChoice.Items.Clear();
+        for (int number = 1; number <= 12; number++)
+        {
+            string active = number == _save.CurrentBoxNumber ? " — active" : "";
+            _boxChoice.Items.Add(new BoxItem(number,
+                $"Boîte {number} ({counts[number - 1]}/20){active}"));
+        }
+        _boxChoice.EndUpdate();
+        _boxChoice.SelectedIndex = Math.Clamp(selectedBox - 1, 0, 11);
+        LoadParty();
+        LoadBox();
+        UpdateButtons();
     }
 
     private void LoadParty()
     {
-        _partyGrid.Rows.Clear();
-
-        IReadOnlyList<Gen1Pokemon> party =
-            _saveFile.ReadParty();
-
-        foreach (Gen1Pokemon pokemon in party)
+        _party.Rows.Clear();
+        IReadOnlyList<Gen1Pokemon> list = _save.ReadParty();
+        foreach (Gen1Pokemon pokemon in list)
         {
-            int rowIndex = _partyGrid.Rows.Add(
-                pokemon.Slot,
-                pokemon.Nickname,
-                pokemon.SpeciesName,
-                pokemon.Level,
-                $"{pokemon.CurrentHp} / {pokemon.MaximumHp}",
-                pokemon.Status);
-
-            _partyGrid.Rows[rowIndex].Tag = pokemon;
+            int row = _party.Rows.Add(
+                pokemon.Slot, pokemon.Nickname, pokemon.SpeciesName, pokemon.Types,
+                pokemon.Level, $"{pokemon.CurrentHp} / {pokemon.MaximumHp}",
+                pokemon.Status, pokemon.MovesSummary);
+            _party.Rows[row].Tag = pokemon;
         }
-
-        _addButton.Enabled = party.Count < 6;
-
-        _informationLabel.Text = party.Count switch
-        {
-            0 => "Aucun Pokémon trouvé dans l’équipe.",
-            1 => "1 Pokémon dans l’équipe",
-            _ => $"{party.Count} Pokémon dans l’équipe"
-        };
+        _partyInfo.Text = $"{list.Count}/6 Pokémon — double-cliquez pour modifier les statistiques";
     }
 
-    private void TeamForm_Resize(
-        object? sender,
-        EventArgs e)
+    private void LoadBox()
     {
-        _closeButton.Location = new Point(
-            ClientSize.Width - _closeButton.Width - 20,
-            ClientSize.Height - _closeButton.Height - 18);
-
-        _deleteButton.Location = new Point(
-            20,
-            ClientSize.Height - _deleteButton.Height - 18);
-    }
-
-    private void PartyGrid_CellDoubleClick(
-    object? sender,
-    DataGridViewCellEventArgs e)
-    {
-        if (e.RowIndex < 0)
+        if (_boxChoice.SelectedItem is not BoxItem item)
             return;
 
-        DataGridViewRow row =
-            _partyGrid.Rows[e.RowIndex];
-
-        if (row.Tag is not Gen1Pokemon pokemon)
-            return;
-
-        using PokemonDetailsForm detailsForm =
-            new(_saveFile, pokemon);
-
-        DialogResult result =
-            detailsForm.ShowDialog(this);
-
-        if (result == DialogResult.OK)
+        _box.Rows.Clear();
+        IReadOnlyList<Gen1Pokemon> all = _save.ReadBox(item.Number);
+        string search = _search.Text.Trim();
+        IEnumerable<Gen1Pokemon> shown = all;
+        if (search.Length > 0)
         {
-            // Relit les données modifiées et actualise la grille.
-            LoadParty();
-        }
-    }
-    private void PartyGrid_SelectionChanged(
-    object? sender,
-    EventArgs e)
-    {
-        _deleteButton.Enabled =
-            GetSelectedPokemon() is not null;
-    }
-
-    private Gen1Pokemon? GetSelectedPokemon()
-    {
-        if (_partyGrid.CurrentRow?.Tag
-            is Gen1Pokemon pokemon)
-        {
-            return pokemon;
+            shown = shown.Where(p =>
+                p.Nickname.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
+                p.SpeciesName.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
+                p.Types.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
+                p.MovesSummary.Contains(search, StringComparison.CurrentCultureIgnoreCase));
         }
 
-        return null;
+        foreach (Gen1Pokemon pokemon in shown)
+        {
+            int row = _box.Rows.Add(
+                pokemon.Slot, pokemon.Nickname, pokemon.SpeciesName, pokemon.Types,
+                pokemon.Level, pokemon.Status, pokemon.MovesSummary,
+                pokemon.OriginalTrainerId);
+            _box.Rows[row].Tag = pokemon;
+        }
+
+        _boxInfo.Text = search.Length == 0
+            ? $"{all.Count}/20 Pokémon"
+            : $"{_box.Rows.Count} résultat(s) sur {all.Count}";
+        UpdateButtons();
     }
 
-    private void DeleteButton_Click(
-        object? sender,
-        EventArgs e)
+    private void AddPokemon(object? sender, EventArgs e)
     {
-        Gen1Pokemon? pokemon =
-            GetSelectedPokemon();
-
-        if (pokemon is null)
-            return;
-
-        string displayedName =
-            string.IsNullOrWhiteSpace(pokemon.Nickname)
-                ? pokemon.SpeciesName
-                : pokemon.Nickname;
-
-        DialogResult confirmation =
-            MessageBox.Show(
-                $"Supprimer {displayedName} de l'équipe ?\n\n" +
-                "Le Pokémon sera définitivement retiré lorsque " +
-                "la sauvegarde sera enregistrée.",
-                "Confirmer la suppression",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning,
-                MessageBoxDefaultButton.Button2);
-
-        if (confirmation != DialogResult.Yes)
-            return;
-
-        try
-        {
-            _saveFile.DeletePartyPokemon(
-                pokemon.Slot - 1);
-
-            LoadParty();
-
-            _deleteButton.Enabled =
-                GetSelectedPokemon() is not null;
-        }
-        catch (Exception exception)
-        {
-            MessageBox.Show(
-                exception.Message,
-                "Suppression impossible",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-        }
-    }
-
-    private void AddButton_Click(
-        object? sender,
-        EventArgs e)
-    {
-        if (!_saveFile.CanAddPartyPokemon)
-        {
-            MessageBox.Show(
-                "L'équipe contient déjà six Pokémon.",
-                "Équipe complète",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-            return;
-        }
-
         using AddPokemonForm form = new();
+        if (form.ShowDialog(this) == DialogResult.OK)
+            Run(() => _save.AddPartyPokemonCoherent(form.SelectedSpeciesId,
+                form.SelectedLevel, form.SelectedNickname), "Ajout impossible");
+    }
 
-        if (form.ShowDialog(this) != DialogResult.OK)
-            return;
+    private void ReplacePokemon(object? sender, EventArgs e)
+    {
+        Gen1Pokemon? selected = PartySelection();
+        if (selected is null) return;
+        using AddPokemonForm form = new("Remplacer le Pokémon", "Remplacer");
+        if (form.ShowDialog(this) == DialogResult.OK)
+            Run(() => _save.ReplacePartyPokemon(selected.Slot - 1,
+                form.SelectedSpeciesId, form.SelectedLevel, form.SelectedNickname),
+                "Remplacement impossible");
+    }
 
-        try
+    private void DeletePokemon(object? sender, EventArgs e)
+    {
+        Gen1Pokemon? selected = PartySelection();
+        if (selected is null || _save.PartyCount <= 1 || !Confirm($"Supprimer {selected} de l'équipe ?")) return;
+        Run(() => _save.DeletePartyPokemon(selected.Slot - 1), "Suppression impossible");
+    }
+
+    private void DuplicatePokemon(object? sender, EventArgs e)
+    {
+        Gen1Pokemon? selected = PartySelection();
+        if (selected is not null)
+            Run(() => _save.DuplicatePartyPokemon(selected.Slot - 1), "Duplication impossible");
+    }
+
+    private void DepositPokemon(object? sender, EventArgs e)
+    {
+        Gen1Pokemon? selected = PartySelection();
+        if (selected is not null)
+            Run(() => _save.DepositPartyPokemon(selected.Slot - 1, SelectedBox), "Dépôt impossible");
+    }
+
+    private void AddBoxPokemon(object? sender, EventArgs e)
+    {
+        using AddPokemonForm form = new("Ajouter dans la boîte", "Ajouter au PC");
+        if (form.ShowDialog(this) == DialogResult.OK)
+            Run(() => _save.AddBoxPokemon(SelectedBox, form.SelectedSpeciesId,
+                form.SelectedLevel, form.SelectedNickname), "Ajout impossible");
+    }
+
+    private void DeleteBoxPokemon(object? sender, EventArgs e)
+    {
+        Gen1Pokemon? selected = BoxSelection();
+        if (selected is null || !Confirm($"Supprimer définitivement {selected} du PC ?")) return;
+        Run(() => _save.DeleteBoxPokemon(SelectedBox, selected.Slot - 1), "Suppression impossible");
+    }
+
+    private void WithdrawPokemon(object? sender, EventArgs e)
+    {
+        Gen1Pokemon? selected = BoxSelection();
+        if (selected is not null)
+            Run(() => _save.WithdrawBoxPokemon(SelectedBox, selected.Slot - 1), "Retrait impossible");
+    }
+
+    private void MoveBoxPokemon(object? sender, EventArgs e)
+    {
+        Gen1Pokemon? selected = BoxSelection();
+        if (selected is null) return;
+        int? destination = BoxSelectionForm.SelectBox(this, SelectedBox);
+        if (destination is not null)
+            Run(() => _save.MoveBoxPokemon(SelectedBox, selected.Slot - 1, destination.Value),
+                "Déplacement impossible");
+    }
+
+    private void ReorderParty(int direction)
+    {
+        Gen1Pokemon? selected = PartySelection();
+        if (selected is null) return;
+        int from = selected.Slot - 1;
+        int to = from + direction;
+        if (to >= 0 && to < _save.PartyCount)
+            Run(() => _save.MovePartyPokemon(from, to), "Réorganisation impossible");
+    }
+
+    private void PartyDoubleClick(object? sender, DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex < 0 || _party.Rows[e.RowIndex].Tag is not Gen1Pokemon pokemon) return;
+        using PokemonDetailsForm form = new(_save, pokemon);
+        if (form.ShowDialog(this) == DialogResult.OK) LoadEverything();
+    }
+
+    private void Run(Action action, string title)
+    {
+        try { action(); LoadEverything(); }
+        catch (Exception ex)
         {
-            _saveFile.AddPartyPokemon(
-                form.SelectedSpeciesId,
-                form.SelectedLevel,
-                form.SelectedNickname);
-
-            LoadParty();
-        }
-        catch (Exception exception)
-        {
-            MessageBox.Show(
-                exception.Message,
-                "Ajout impossible",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
+            MessageBox.Show(ex.Message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 
+    private async void SelectionChanged(Gen1Pokemon? pokemon)
+    {
+        UpdateButtons();
+        if (pokemon is null) return;
+        _selectedInfo.Text = $"{pokemon} — {pokemon.SpeciesName} — {pokemon.Types} — Niveau {pokemon.Level}";
+        byte requested = pokemon.SpeciesId;
+        _requestedSpriteSpecies = requested;
+        Image? image = await PokemonSpriteService.GetAsync(requested);
+        if (_requestedSpriteSpecies == requested) _sprite.Image = image;
+    }
+
+    private void UpdateButtons()
+    {
+        Gen1Pokemon? party = PartySelection();
+        Gen1Pokemon? box = BoxSelection();
+        Set("add", _save.CanAddPartyPokemon);
+        Set("replace", party is not null);
+        Set("delete", party is not null && _save.PartyCount > 1);
+        Set("up", party is { Slot: > 1 });
+        Set("down", party is not null && party.Slot < _save.PartyCount);
+        Set("duplicate", party is not null && _save.CanAddPartyPokemon);
+        Set("heal", _save.PartyCount > 0);
+        Set("deposit", party is not null && _save.PartyCount > 1);
+        Set("boxDelete", box is not null);
+        Set("withdraw", box is not null && _save.CanAddPartyPokemon);
+        Set("boxMove", box is not null);
+    }
+
+    private void Set(string key, bool enabled)
+    {
+        if (_buttons.TryGetValue(key, out Button? button)) button.Enabled = enabled;
+    }
+
+    private Gen1Pokemon? PartySelection() => _party.CurrentRow?.Tag as Gen1Pokemon;
+    private Gen1Pokemon? BoxSelection() => _box.CurrentRow?.Tag as Gen1Pokemon;
+    private int SelectedBox => _boxChoice.SelectedItem is BoxItem item ? item.Number : 1;
+    private bool Confirm(string text) => MessageBox.Show(text, "Confirmation",
+        MessageBoxButtons.YesNo, MessageBoxIcon.Warning,
+        MessageBoxDefaultButton.Button2) == DialogResult.Yes;
+
+    private void AddAction(FlowLayoutPanel panel, string key, string text, EventHandler handler)
+    {
+        Button button = NewButton(text);
+        button.Click += handler;
+        _buttons[key] = button;
+        panel.Controls.Add(button);
+    }
+
+    private static DataGridView NewGrid() => new()
+    {
+        Dock = DockStyle.Fill, ReadOnly = true, MultiSelect = false,
+        AllowUserToAddRows = false, AllowUserToDeleteRows = false,
+        AllowUserToResizeRows = false, RowHeadersVisible = false,
+        SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+        AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+        BackgroundColor = Color.FromArgb(232, 239, 199)
+    };
+
+    private static void AddColumns(DataGridView grid, params (string Header, float Weight)[] columns)
+    {
+        foreach ((string header, float weight) in columns)
+            grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = header, FillWeight = weight });
+    }
+
+    private static GroupBox NewGroup(string text) => new()
+    {
+        Text = text, Dock = DockStyle.Fill, Padding = new Padding(10)
+    };
+
+    private static TableLayoutPanel NewSectionLayout(int rows, params int[] fixedHeights)
+    {
+        TableLayoutPanel panel = new() { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = rows };
+        foreach (int height in fixedHeights.Take(rows - 1))
+            panel.RowStyles.Add(new RowStyle(SizeType.Absolute, height));
+        panel.RowStyles.Insert(rows - 1, new RowStyle(SizeType.Percent, 100));
+        if (fixedHeights.Length == rows - 1)
+        {
+            panel.RowStyles.Clear();
+            for (int index = 0; index < rows; index++)
+                panel.RowStyles.Add(index == rows - 2
+                    ? new RowStyle(SizeType.Percent, 100)
+                    : new RowStyle(SizeType.Absolute, fixedHeights[index < rows - 2 ? index : ^1]));
+        }
+        return panel;
+    }
+
+    private static FlowLayoutPanel NewActions() => new()
+    {
+        Dock = DockStyle.Fill, AutoScroll = true, WrapContents = true
+    };
+
+    private static Button NewButton(string text) => new()
+    {
+        Text = text, AutoSize = true, MinimumSize = new Size(92, 32), Margin = new Padding(3)
+    };
+
+    private sealed record BoxItem(int Number, string Label)
+    {
+        public override string ToString() => Label;
+    }
 }

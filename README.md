@@ -71,12 +71,24 @@ The original save file is never overwritten by default.
 - Display the current play time
 - Read and edit the eight Kanto badges
 
+### Pokémon storage
+
+- View enriched party information: types, moves, status and sprites
+- Add, replace, delete, duplicate and reorder party Pokémon
+- Heal the entire party, including HP, status and PP
+- Browse and search all 12 PC boxes
+- Add and delete boxed Pokémon
+- Deposit and withdraw Pokémon between the party and the PC
+- Move Pokémon between boxes while preserving their binary data
+- Generate coherent Pokémon using Generation I base stats, types, growth rates and DVs
+
 ### Data integrity
 
 - Encode text using the Generation I character table
 - Decode binary-coded decimal money values
 - Read and update individual badge bits
 - Recalculate the main checksum automatically
+- Recalculate both PC-box bank checksums and all individual box checksums
 - Reject unsupported characters and invalid values
 
 <a id="screenshot"></a>
@@ -141,7 +153,7 @@ The project is currently available from source.
    git clone https://github.com/ThomasPeccavet/PkmGen1SaveEditor.git
    ```
 
-2. Open `PkmGen1SaveEditor.sln` in Visual Studio.
+2. Open `PkmGen1SaveEditor.slnx` in Visual Studio.
 3. Wait for dependency restoration to finish.
 4. Select the `Debug` or `Release` configuration.
 5. Build the solution.
