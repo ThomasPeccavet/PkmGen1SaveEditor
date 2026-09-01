@@ -6,7 +6,7 @@ namespace PkmGen1SaveEditor;
 [DesignerCategory("Code")]
 internal sealed class GlassPanel : Panel
 {
-    public int CornerRadius { get; set; } = 18;
+    private const int CornerRadius = 18;
 
     public GlassPanel()
     {

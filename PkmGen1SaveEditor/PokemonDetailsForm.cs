@@ -38,23 +38,23 @@ internal sealed class PokemonDetailsForm : Form
         _maximumHpInput = CreateNumericInput(
             1,
             ushort.MaxValue,
-            Math.Max(1, pokemon.MaximumHp));
+            Math.Max(1, (int)pokemon.MaximumHp));
         _attackInput = CreateNumericInput(
             1,
             ushort.MaxValue,
-            Math.Max(1, pokemon.Attack));
+            Math.Max(1, (int)pokemon.Attack));
         _defenseInput = CreateNumericInput(
             1,
             ushort.MaxValue,
-            Math.Max(1, pokemon.Defense));
+            Math.Max(1, (int)pokemon.Defense));
         _speedInput = CreateNumericInput(
             1,
             ushort.MaxValue,
-            Math.Max(1, pokemon.Speed));
+            Math.Max(1, (int)pokemon.Speed));
         _specialInput = CreateNumericInput(
             1,
             ushort.MaxValue,
-            Math.Max(1, pokemon.Special));
+            Math.Max(1, (int)pokemon.Special));
 
         InitializeTrainingInputs();
         InitializeMoveInputs();
