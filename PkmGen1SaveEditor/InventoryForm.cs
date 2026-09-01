@@ -22,8 +22,8 @@ internal sealed class InventoryForm : Form
 
         Text = "Inventaire complet";
         StartPosition = FormStartPosition.CenterParent;
-        ClientSize = new Size(1220, 790);
-        MinimumSize = new Size(1000, 690);
+        ClientSize = new Size(1220, 840);
+        MinimumSize = new Size(1000, 760);
         ShowInTaskbar = false;
         ModernTheme.Apply(this);
 
@@ -41,11 +41,11 @@ internal sealed class InventoryForm : Form
             ColumnCount = 1,
             RowCount = 5
         };
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 76F));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 118F));
-        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 70F));
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 108F));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 54F));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 96F));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 52F));
 
         root.Controls.Add(CreateHeader(), 0, 0);
         root.Controls.Add(CreateCurrencyCard(), 0, 1);
@@ -155,7 +155,7 @@ internal sealed class InventoryForm : Form
         };
         content.RowStyles.Add(new RowStyle(SizeType.Absolute, 26F));
         content.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 136F));
+        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 92F));
 
         countLabel.Dock = DockStyle.Fill;
         countLabel.ForeColor = ModernTheme.MutedTextColor;
@@ -195,7 +195,7 @@ internal sealed class InventoryForm : Form
         standard.Controls.Add(CreateButton("Supprimer", (_, _) =>
             DeleteSelected(grid, entries), "danger"));
 
-        FlowLayoutPanel quick = CreateActionRow(wrapContents: true);
+        FlowLayoutPanel quick = CreateActionRow();
         quick.Controls.Add(new Label
         {
             Text = "Ajout rapide :",
@@ -203,15 +203,23 @@ internal sealed class InventoryForm : Form
             ForeColor = ModernTheme.MutedTextColor,
             Padding = new Padding(0, 9, 4, 0)
         });
-        quick.Controls.Add(CreateCompactButton("CT / CS", (_, _) =>
+
+        Button quickButton = CreateButton("Choisir une catégorie…", (_, _) => { });
+        ContextMenuStrip quickMenu = new();
+        quickMenu.Items.Add("CT / CS", null, (_, _) =>
             AddItem(grid, entries, capacity,
-                [Gen1ItemCategory.TechnicalMachine, Gen1ItemCategory.HiddenMachine])));
-        quick.Controls.Add(CreateCompactButton("Balls", (_, _) =>
-            AddItem(grid, entries, capacity, [Gen1ItemCategory.PokeBall])));
-        quick.Controls.Add(CreateCompactButton("Soins", (_, _) =>
-            AddItem(grid, entries, capacity, [Gen1ItemCategory.Healing])));
-        quick.Controls.Add(CreateCompactButton("Clés", (_, _) =>
-            AddItem(grid, entries, capacity, [Gen1ItemCategory.KeyItem])));
+                [Gen1ItemCategory.TechnicalMachine, Gen1ItemCategory.HiddenMachine]));
+        quickMenu.Items.Add("Poké Balls", null, (_, _) =>
+            AddItem(grid, entries, capacity, [Gen1ItemCategory.PokeBall]));
+        quickMenu.Items.Add("Soins", null, (_, _) =>
+            AddItem(grid, entries, capacity, [Gen1ItemCategory.Healing]));
+        quickMenu.Items.Add("Objets clés", null, (_, _) =>
+            AddItem(grid, entries, capacity, [Gen1ItemCategory.KeyItem]));
+        quickButton.ContextMenuStrip = quickMenu;
+        quickButton.Click += (_, _) =>
+            quickMenu.Show(quickButton, new Point(0, quickButton.Height));
+        quickButton.Disposed += (_, _) => quickMenu.Dispose();
+        quick.Controls.Add(quickButton);
 
         actions.Controls.Add(standard, 0, 0);
         actions.Controls.Add(quick, 0, 1);
@@ -554,11 +562,4 @@ internal sealed class InventoryForm : Form
         return button;
     }
 
-    private static Button CreateCompactButton(string text, EventHandler onClick)
-    {
-        Button button = CreateButton(text, onClick);
-        button.MinimumSize = new Size(72, 34);
-        button.Padding = new Padding(2, 0, 2, 0);
-        return button;
-    }
 }
