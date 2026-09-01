@@ -7,14 +7,14 @@ internal partial class TeamForm : Form
     private readonly DataGridView _box = NewGrid();
     private readonly ComboBox _boxChoice = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 190 };
     private readonly TextBox _search = new() { Width = 220, PlaceholderText = "Nom, type ou attaque…" };
-    private readonly Label _partyInfo = new() { AutoSize = true, ForeColor = Color.DimGray };
-    private readonly Label _boxInfo = new() { AutoSize = true, ForeColor = Color.DimGray };
-    private readonly Label _selectedInfo = new() { AutoSize = true, ForeColor = Color.DimGray };
+    private readonly Label _partyInfo = new() { AutoSize = true, ForeColor = PokemonTheme.AccentColor };
+    private readonly Label _boxInfo = new() { AutoSize = true, ForeColor = PokemonTheme.AccentColor };
+    private readonly Label _selectedInfo = new() { AutoSize = true, ForeColor = PokemonTheme.AccentColor };
     private readonly PictureBox _sprite = new()
     {
         Size = new Size(78, 78),
         SizeMode = PictureBoxSizeMode.Zoom,
-        BackColor = Color.FromArgb(216, 226, 179),
+        BackColor = PokemonTheme.PanelBackColor,
         BorderStyle = BorderStyle.FixedSingle
     };
 
@@ -34,9 +34,7 @@ internal partial class TeamForm : Form
         StartPosition = FormStartPosition.CenterParent;
         ClientSize = new Size(1220, 690);
         MinimumSize = new Size(1050, 600);
-        BackColor = Color.FromArgb(232, 239, 199);
-        ForeColor = Color.FromArgb(26, 39, 27);
-        Font = new Font("Segoe UI", 9F);
+        PokemonTheme.Apply(this);
 
         TableLayoutPanel root = new()
         {
@@ -53,6 +51,7 @@ internal partial class TeamForm : Form
         root.Controls.Add(BuildStorage(), 0, 1);
         root.Controls.Add(BuildFooter(), 0, 2);
         Controls.Add(root);
+        PokemonTheme.StyleDescendants(this);
     }
 
     private Control BuildHeader()
@@ -119,7 +118,7 @@ internal partial class TeamForm : Form
     private Control BuildPartyPanel()
     {
         ConfigurePartyGrid();
-        GroupBox group = NewGroup("ÉQUIPE");
+        PokemonGroupBox group = NewGroup("ÉQUIPE");
         TableLayoutPanel layout = NewSectionLayout(3, 28, 78);
 
         FlowLayoutPanel actions = NewActions();
@@ -142,7 +141,7 @@ internal partial class TeamForm : Form
     private Control BuildBoxPanel()
     {
         ConfigureBoxGrid();
-        GroupBox group = NewGroup("BOÎTES PC");
+        PokemonGroupBox group = NewGroup("BOÎTES PC");
         TableLayoutPanel layout = NewSectionLayout(4, 38, 28, 78);
         FlowLayoutPanel filters = NewActions();
         filters.WrapContents = false;
@@ -415,7 +414,7 @@ internal partial class TeamForm : Form
         AllowUserToResizeRows = false, RowHeadersVisible = false,
         SelectionMode = DataGridViewSelectionMode.FullRowSelect,
         AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-        BackgroundColor = Color.FromArgb(232, 239, 199)
+        BackgroundColor = PokemonTheme.WindowBackColor
     };
 
     private static void AddColumns(DataGridView grid, params (string Header, float Weight)[] columns)
@@ -424,10 +423,8 @@ internal partial class TeamForm : Form
             grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = header, FillWeight = weight });
     }
 
-    private static GroupBox NewGroup(string text) => new()
-    {
-        Text = text, Dock = DockStyle.Fill, Padding = new Padding(10)
-    };
+    private static PokemonGroupBox NewGroup(string text) =>
+        PokemonTheme.CreateGroup(text);
 
     private static TableLayoutPanel NewSectionLayout(int rows, params int[] fixedHeights)
     {

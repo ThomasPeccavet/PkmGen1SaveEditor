@@ -74,9 +74,7 @@ internal sealed class PokemonDetailsForm : Form
         ClientSize = new Size(650, 570);
         MinimumSize = new Size(610, 540);
 
-        BackColor = Color.FromArgb(232, 239, 199);
-        ForeColor = Color.FromArgb(26, 39, 27);
-        Font = new Font("Segoe UI", 9F);
+        PokemonTheme.Apply(this);
 
         TableLayoutPanel mainLayout = new()
         {
@@ -119,6 +117,7 @@ internal sealed class PokemonDetailsForm : Form
             3);
 
         Controls.Add(mainLayout);
+        PokemonTheme.StyleDescendants(this);
     }
 
     private Control CreateHeader()
@@ -151,7 +150,7 @@ internal sealed class PokemonDetailsForm : Form
             Text =
                 $"Surnom : {nickname}   |   " +
                 $"ID Dresseur : {_pokemon.OriginalTrainerId}",
-            ForeColor = Color.DimGray
+            ForeColor = PokemonTheme.AccentColor
         };
 
         header.Controls.Add(speciesLabel);
@@ -162,12 +161,11 @@ internal sealed class PokemonDetailsForm : Form
 
     private Control CreateStatisticsGroup()
     {
-        GroupBox group = new()
+        PokemonGroupBox group = new()
         {
             Text = "STATISTIQUES MODIFIABLES",
             Dock = DockStyle.Fill,
-            Margin = new Padding(0, 0, 0, 10),
-            Padding = new Padding(14)
+            Margin = new Padding(0, 0, 0, 10)
         };
 
         TableLayoutPanel table = new()
@@ -318,12 +316,11 @@ internal sealed class PokemonDetailsForm : Form
 
     private Control CreateMovesGroup()
     {
-        GroupBox group = new()
+        PokemonGroupBox group = new()
         {
             Text = "ATTAQUES",
             Dock = DockStyle.Fill,
-            Margin = new Padding(0, 0, 0, 10),
-            Padding = new Padding(12)
+            Margin = new Padding(0, 0, 0, 10)
         };
 
         TableLayoutPanel table = new()

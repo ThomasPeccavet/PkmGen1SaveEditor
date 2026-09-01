@@ -1,342 +1,280 @@
 <div align="center">
 
-#  Pkm Gen 1 Save Editor
+<img src="PkmGen1SaveEditor/asset/PkmnGen1Save.png" width="260" alt="Logo Pkm Gen 1 Save Editor">
 
-**A lightweight Windows save editor for Pokémon Red and Pokémon Blue.**
+# Pkm Gen 1 Save Editor
 
-Open, validate, edit and export Generation I Game Boy save files through a simple Windows interface.
-<img width="940" height="940" alt="PkmnGen1Save" src="https://github.com/ThomasPeccavet/PkmGen1SaveEditor/blob/master/PkmGen1SaveEditor/asset/PkmnGen1Save.png" />
-<br>
+**Un éditeur Windows moderne pour les sauvegardes de Pokémon Rouge et Bleu.**
 
-<a href="https://github.com/ThomasPeccavet/PkmGen1SaveEditor">
-  <img alt="GitHub repository" src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white">
-</a>
-<a href="https://dotnet.microsoft.com/">
-  <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white">
-</a>
-<a href="https://learn.microsoft.com/dotnet/desktop/winforms/">
-  <img alt="Windows Forms" src="https://img.shields.io/badge/UI-Windows_Forms-0078D4?style=for-the-badge&logo=windows11&logoColor=white">
-</a>
-<a href="./LICENSE">
-  <img alt="MIT License" src="https://img.shields.io/badge/License-MIT-2EA44F?style=for-the-badge">
-</a>
-<a href="#roadmap">
-  <img alt="Development status" src="https://img.shields.io/badge/Status-Alpha-F5A623?style=for-the-badge">
-</a>
+[![Build](https://github.com/ThomasPeccavet/PkmGen1SaveEditor/actions/workflows/build.yml/badge.svg)](https://github.com/ThomasPeccavet/PkmGen1SaveEditor/actions/workflows/build.yml)
+![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
+![Windows Forms](https://img.shields.io/badge/UI-Windows%20Forms-0078D4?logo=windows11&logoColor=white)
+[![Licence MIT](https://img.shields.io/badge/Licence-MIT-2EA44F)](LICENSE.txt)
+![Statut](https://img.shields.io/badge/Statut-Alpha-F5A623)
 
-<br><br>
-
-[Features](#features) •
-[Compatibility](#compatibility) •
-[Installation](#installation) •
-[Usage](#usage) •
-[Roadmap](#roadmap) •
-[Contributing](#contributing)
+[Fonctionnalités](#fonctionnalités) ·
+[Compatibilité](#compatibilité) ·
+[Installation](#installation) ·
+[Utilisation](#utilisation) ·
+[Feuille de route](#feuille-de-route)
 
 </div>
 
 ---
 
-<a id="overview"></a>
+## Présentation
 
-##  Overview
+Pkm Gen 1 Save Editor est une application non officielle permettant d’ouvrir,
+de consulter et de modifier une sauvegarde Game Boy de **Pokémon Rouge ou
+Pokémon Bleu** depuis une interface Windows Forms.
 
-Pkm Gen 1 Save Editor is an unofficial, fan-made Windows application for editing save files from the English versions of **Pokémon Red** and **Pokémon Blue**.
+L’éditeur manipule directement les structures binaires de la première
+génération : informations du dresseur, équipe, statistiques des Pokémon et
+douze boîtes PC. Les checksums concernés sont recalculés après chaque
+modification afin de préserver l’intégrité de la sauvegarde.
 
-The application reads raw Game Boy `.sav` files, validates their data, exposes editable trainer information and automatically recalculates the game's checksum when exporting changes.
-
-The original save file is never overwritten by default.
+L’interface reprend l’esthétique de Pokémon Rouge/Bleu : palette Game Boy,
+cadres pixelisés et composants graphiques personnalisés.
 
 > [!WARNING]
-> This project is still in active development. Always keep a backup of your original save file before making modifications.
+> Le projet est encore en version alpha. Conservez toujours une copie intacte
+> de votre sauvegarde originale avant d’effectuer une modification.
 
-<a id="features"></a>
+## Fonctionnalités
 
-##  Features
+### Gestion des sauvegardes
 
-### Save-file management
+- ouverture des fichiers Game Boy bruts de 32 Kio (`.sav`) ;
+- vérification de la taille et du checksum principal ;
+- détection des sauvegardes incompatibles ou corrompues ;
+- export vers un nouveau fichier `_edited.sav` ;
+- conservation du fichier original par défaut.
 
-- Open standard 32 KiB Game Boy `.sav` files
-- Verify the expected save-file size
-- Validate the main save-data checksum
-- Detect incompatible or corrupted saves
-- Export changes to a separate `_edited.sav` file
-- Preserve the original save file
+### Dresseur
 
-### Trainer information
+- lecture et modification du nom du joueur ;
+- lecture et modification du nom du rival ;
+- lecture et modification de l’argent, de 0 à 999 999 ₽ ;
+- lecture du temps de jeu ;
+- lecture et modification des huit badges de Kanto.
 
-- Read and edit the player name
-- Read and edit the rival name
-- Read and edit the player's money
-- Display the current play time
-- Read and edit the eight Kanto badges
+### Équipe Pokémon
 
-### Pokémon storage
+- affichage du surnom, de l’espèce, des types, du niveau, des PV, du statut et
+  des attaques ;
+- fiche détaillée avec modification des statistiques et de l’expérience ;
+- ajout cohérent d’un Pokémon à partir de son espèce et de son niveau ;
+- remplacement, suppression et duplication ;
+- réorganisation de l’ordre de l’équipe ;
+- soin collectif des PV, statuts et PP ;
+- sprites Rouge/Bleu chargés à la demande et mis en cache ;
+- protection contre une équipe vide ou supérieure à six membres.
 
-- View enriched party information: types, moves, status and sprites
-- Add, replace, delete, duplicate and reorder party Pokémon
-- Heal the entire party, including HP, status and PP
-- Browse and search all 12 PC boxes
-- Add and delete boxed Pokémon
-- Deposit and withdraw Pokémon between the party and the PC
-- Move Pokémon between boxes while preserving their binary data
-- Generate coherent Pokémon using Generation I base stats, types, growth rates and DVs
+### Boîtes PC
 
-### Data integrity
+- lecture des 12 boîtes et de leur capacité de 20 Pokémon ;
+- ajout et suppression de Pokémon stockés ;
+- dépôt depuis l’équipe et retrait vers l’équipe ;
+- déplacement d’un Pokémon entre deux boîtes ;
+- recherche par surnom, espèce, type ou attaque ;
+- synchronisation de la boîte active et des banques de stockage.
 
-- Encode text using the Generation I character table
-- Decode binary-coded decimal money values
-- Read and update individual badge bits
-- Recalculate the main checksum automatically
-- Recalculate both PC-box bank checksums and all individual box checksums
-- Reject unsupported characters and invalid values
+### Intégrité des données
 
-<a id="screenshot"></a>
+- encodage et décodage du texte de la génération I ;
+- lecture et écriture de l’argent en BCD ;
+- lecture et écriture des valeurs 16 et 24 bits en big-endian ;
+- recalcul du checksum principal ;
+- recalcul des checksums des deux banques PC et de chaque boîte ;
+- validation des limites avant toute écriture binaire.
 
-## Screenshot
+## Aperçu de l’interface
 
-A screenshot of the redesigned interface will be added before the first public release.
+L’application comporte maintenant un thème commun à toutes les fenêtres :
 
-<!--
-Place the image at docs/screenshots/main-window.png, then remove this comment:
+- palette vert crème inspirée de l’écran Game Boy ;
+- `PokemonGroupBox` dessinées à partir de tuiles 8 × 8 ;
+- boutons, champs et tableaux harmonisés ;
+- fiches d’ajout, de déplacement et de modification cohérentes avec la fenêtre
+  principale.
 
-![Pkm Gen 1 Save Editor main window](docs/screenshots/main-window.png)
--->
+Une capture complète sera ajoutée avant la première version distribuable.
 
-<a id="compatibility"></a>
+## Compatibilité
 
-## Compatibility
-
-| Game | Language | Status |
+| Jeu | Région/langue | État |
 |---|---|:---:|
-| Pokémon Red | English | ✅ Supported |
-| Pokémon Blue | English | ✅ Supported |
-| Pokémon Rouge | French | 🛠️ Planned |
-| Pokémon Bleu | French | 🛠️ Planned |
-| Pokémon Yellow | English | ❌ Not supported |
-| Pokémon Yellow | French | ❌ Not supported |
+| Pokémon Rouge / Bleu | Français | ✅ Pris en charge |
+| Pokémon Red / Blue | Anglais | 🧪 Structure prise en charge, tests à compléter |
+| Pokémon Jaune / Yellow | Toutes | ❌ Non pris en charge |
+| Formats avec en-tête ou pied d’émulateur | Toutes | ❌ Non pris en charge |
 
-The current version expects a raw **32,768-byte** save file without an emulator-specific header or footer.
+Le fichier doit faire exactement **32 768 octets**. La sélection de langue
+présente dans l’interface est encore informative : la détection automatique de
+la version et de la langue reste à développer.
 
-Game ROMs, BIOS files and console keys are neither required nor included.
+Les ROM, BIOS et clés de console ne sont ni nécessaires ni fournis.
 
-<a id="requirements"></a>
+## Prérequis
 
-## Requirements
-
-### To run from source
-
-- Windows 10 or Windows 11
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- Windows 10 ou Windows 11 ;
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) ;
 - [Visual Studio Community](https://visualstudio.microsoft.com/vs/community/)
-- Visual Studio workload: **.NET desktop development**
-
-### To use a future release
-
-The standalone Windows release will not require Visual Studio.
-
-Prebuilt executables will be provided through the repository's
-[Releases page](https://github.com/ThomasPeccavet/PkmGen1SaveEditor/releases)
-when version `0.1.0` is ready.
-
-<a id="installation"></a>
+  avec la charge de travail **Développement Desktop .NET**.
 
 ## Installation
 
-The project is currently available from source.
+Le projet est actuellement distribué sous forme de code source.
 
-### Using Visual Studio
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/ThomasPeccavet/PkmGen1SaveEditor.git
-   ```
-
-2. Open `PkmGen1SaveEditor.slnx` in Visual Studio.
-3. Wait for dependency restoration to finish.
-4. Select the `Debug` or `Release` configuration.
-5. Build the solution.
-6. Press `F5` to start the application.
-
-You can also download the repository as a ZIP file from GitHub and open the solution manually.
-
-<a id="usage"></a>
-
-## Usage
-
-1. Export a `.sav` file from:
-   - an emulator;
-   - a flash cartridge;
-   - or a cartridge-dumping device.
-2. Start Pkm Gen 1 Save Editor.
-3. Select **Open a save file**.
-4. Choose a compatible Pokémon Red or Blue save.
-5. Modify the desired trainer information.
-6. Select **Save as**.
-7. Save the result as a new `.sav` file.
-8. Import the edited save into your emulator or cartridge tool.
-
-### Recommended workflow
-
-```text
-Original save
-      │
-      ├── Keep as a permanent backup
-      │
-      └── Open in Pkm Gen 1 Save Editor
-                    │
-                    └── Export as *_edited.sav
+```bash
+git clone https://github.com/ThomasPeccavet/PkmGen1SaveEditor.git
+cd PkmGen1SaveEditor
 ```
 
-Never test new editing features on your only copy of a save file.
+Ouvrez ensuite `PkmGen1SaveEditor.slnx` dans Visual Studio, attendez la
+restauration des dépendances, puis lancez le projet avec `F5`.
 
-<a id="technical-details"></a>
+Pour compiler en ligne de commande :
 
-## ⚙️ Technical details
+```bash
+dotnet build PkmGen1SaveEditor.slnx --configuration Release
+```
 
-The editor currently handles the following Generation I structures:
+Les futures versions prêtes à l’emploi seront publiées dans les
+[Releases GitHub](https://github.com/ThomasPeccavet/PkmGen1SaveEditor/releases).
 
-| Data | Representation |
-|---|---|
-| Player name | Generation I character encoding |
-| Rival name | Generation I character encoding |
-| Money | Three-byte binary-coded decimal |
-| Badges | One byte containing eight bit flags |
-| Play time | Separate hour, minute and second values |
-| Integrity | Complemented eight-bit checksum |
+## Utilisation
 
-The save-file parsing and editing logic is kept inside `Gen1SaveFile`, separate from the Windows Forms interface.
+1. Exportez le fichier `.sav` depuis votre émulateur, flashcart ou lecteur de
+   cartouche.
+2. Lancez l’application et cliquez sur **Ouvrir une sauvegarde**.
+3. Modifiez les informations du dresseur si nécessaire.
+4. Ouvrez **Voir l’équipe** pour gérer l’équipe et les boîtes PC.
+5. Cliquez sur **Enregistrer sous…** dans la fenêtre principale.
+6. Importez le fichier `_edited.sav` dans votre émulateur ou votre matériel.
 
-This separation will make it easier to add automated tests, additional game versions and alternative interfaces later.
+> [!TIP]
+> Travaillez toujours sur une copie. Ne remplacez votre sauvegarde originale
+> qu’après avoir vérifié le résultat dans le jeu.
 
-<a id="project-structure"></a>
+### Sprites
 
-## Project structure
+Les sprites ne sont pas inclus dans le dépôt. Ils sont téléchargés à la demande
+depuis le dépôt public de [PokeAPI/sprites](https://github.com/PokeAPI/sprites),
+puis conservés en mémoire pendant la session. L’édition reste fonctionnelle sans
+connexion Internet ; seul l’aperçu du sprite sera absent.
+
+## Structure du projet
 
 ```text
 PkmGen1SaveEditor/
-├── PkmGen1SaveEditor.sln
+├── .github/workflows/build.yml       # Compilation Windows automatique
+├── PkmGen1SaveEditor.slnx
 ├── README.md
-├── LICENSE
-├── .gitignore
-│
+├── LICENSE.txt
 └── PkmGen1SaveEditor/
-    ├── Gen1SaveFile.cs
-    ├── MainForm.cs
-    ├── MainForm.Designer.cs
-    ├── MainForm.resx
-    ├── Program.cs
-    └── PkmGen1SaveEditor.csproj
+    ├── Gen1SaveFile.cs               # Dresseur, équipe et checksum principal
+    ├── Gen1SaveFile.Storage.cs       # Équipe avancée et boîtes PC
+    ├── Gen1Pokemon.cs                # Modèle d’un Pokémon
+    ├── Gen1SpeciesCatalog.cs         # Noms et identifiants internes
+    ├── Gen1SpeciesData.cs            # Stats, types et croissance
+    ├── Gen1MoveCatalog.cs            # Attaques de la génération I
+    ├── PokemonSpriteService.cs       # Chargement et cache des sprites
+    ├── PokemonGroupBox.cs            # Cadre pixelisé personnalisé
+    ├── PokemonTheme.cs               # Thème partagé par les fenêtres
+    ├── MainForm.cs                    # Fenêtre principale
+    ├── TeamForm.cs                    # Équipe et stockage PC
+    ├── PokemonDetailsForm.cs          # Statistiques détaillées
+    ├── AddPokemonForm.cs              # Création et remplacement
+    └── BoxSelectionForm.cs            # Choix d’une boîte PC
 ```
 
-<a id="roadmap"></a>
+## Détails techniques
 
-## Roadmap
+| Donnée | Représentation |
+|---|---|
+| Taille de sauvegarde | 32 Kio / 32 768 octets |
+| Noms | Table de caractères Pokémon génération I |
+| Argent | 3 octets BCD |
+| Badges | 8 indicateurs binaires dans un octet |
+| Expérience | entier 24 bits big-endian |
+| Équipe | 1 à 6 structures de 44 octets |
+| Boîte PC | 12 boîtes de 20 Pokémon |
+| Intégrité | checksums principal, banques PC et boîtes |
+
+La logique binaire est séparée de l’interface afin de faciliter les tests et
+l’ajout futur d’autres versions du jeu.
+
+## Limites connues
+
+- Pokémon Jaune n’est pas pris en charge.
+- La langue et la version exactes ne sont pas encore détectées automatiquement.
+- Le temps de jeu est affiché mais n’est pas modifiable.
+- Les attaques et leurs PP sont affichés mais ne sont pas encore éditables.
+- Les objets du sac, le Pokédex et les options du jeu ne sont pas éditables.
+- La création d’un Pokémon est cohérente mais ne simule pas encore tous les
+  détails d’une capture naturelle dans le jeu.
+- Les sauvegardes enrichies d’un en-tête ou d’un pied propre à un émulateur ne
+  sont pas reconnues.
+
+## Feuille de route
 
 ### Version 0.1.0
 
-- [x] Create the Windows Forms project
-- [x] Open raw Game Boy save files
-- [x] Validate the file size
-- [x] Validate the main checksum
-- [x] Read trainer information
-- [x] Edit player and rival names
-- [x] Edit money
-- [x] Edit obtained badges
-- [x] Export an edited save file
-- [ ] Complete the redesigned interface
-- [ ] Add an application icon
-- [ ] Add automated save-file tests
-- [ ] Publish the first Windows release
+- [x] ouvrir, vérifier et exporter une sauvegarde ;
+- [x] modifier le dresseur, l’argent et les badges ;
+- [x] consulter et modifier les statistiques de l’équipe ;
+- [x] ajouter, remplacer, supprimer, dupliquer et réorganiser des Pokémon ;
+- [x] gérer les 12 boîtes PC et les transferts ;
+- [x] afficher les types, attaques et sprites ;
+- [x] unifier l’interface rétro sur toutes les fenêtres ;
+- [x] compiler automatiquement chaque Pull Request sur Windows ;
+- [ ] ajouter des tests automatisés sur des sauvegardes anonymisées ;
+- [ ] publier la première version Windows.
 
-### Future versions
+### Évolutions envisagées
 
-- [ ] Edit play time
-- [ ] Edit the player's Pokémon party
-- [ ] Edit Pokémon species, levels and moves
-- [ ] Edit the inventory
-- [ ] Support French save files
-- [ ] Support Pokémon Yellow
-- [ ] Add drag-and-drop save loading
-- [ ] Add automatic backup management
+- [ ] sauvegarde automatique de secours avant modification ;
+- [ ] glisser-déposer d’un fichier `.sav` ;
+- [ ] détection automatique du jeu, de la langue et de la région ;
+- [ ] édition des attaques, PP, DV et EV ;
+- [ ] édition du sac, du PC objets et du Pokédex ;
+- [ ] historique d’annulation/rétablissement ;
+- [ ] prise en charge de Pokémon Jaune ;
+- [ ] rapport de validation avant export.
 
-<a id="known-limitations"></a>
+## Contribuer
 
-## Known limitations
+Les retours, rapports de bugs et contributions sont bienvenus dans les
+[Issues GitHub](https://github.com/ThomasPeccavet/PkmGen1SaveEditor/issues).
 
-- Only English Pokémon Red and Blue saves are currently supported.
-- Emulator-specific save headers and footers are not supported.
-- Pokémon party and inventory editing are not yet implemented.
-- The application has not yet been tested with every emulator or cartridge-dumping device.
-- Only characters supported by the implemented Generation I table can be written.
+Pour contribuer au code :
 
-<a id="contributing"></a>
+1. créez une branche dédiée ;
+2. conservez la logique de sauvegarde séparée de l’interface ;
+3. utilisez uniquement des copies anonymisées de sauvegardes ;
+4. vérifiez la compilation en mode `Release` ;
+5. décrivez clairement le changement dans la Pull Request.
 
-## Contributing
+## Remerciements
 
-Feedback, bug reports and contributions are welcome.
+- [pret/pokered](https://github.com/pret/pokered) pour la documentation issue du
+  désassemblage des jeux ;
+- [PokeAPI/sprites](https://github.com/PokeAPI/sprites) pour l’accès aux sprites
+  utilisés à la demande ;
+- les communautés de préservation et de rétro-ingénierie Pokémon.
 
-Before submitting an issue:
+## Mentions légales
 
-1. Confirm that the save comes from English Pokémon Red or Blue.
-2. Confirm that its size is exactly 32,768 bytes.
-3. Keep a backup of the original file.
-4. Do not publicly upload personal save files unless necessary.
+Pokémon et les noms associés sont des marques de Nintendo, Game Freak et
+Creatures. Ce projet amateur et non officiel n’est affilié, approuvé ou sponsorisé
+par aucune de ces sociétés.
 
-You can report a problem through
-[GitHub Issues](https://github.com/ThomasPeccavet/PkmGen1SaveEditor/issues).
+Le dépôt ne contient ni ROM, ni BIOS, ni clé de console. Les utilisateurs sont
+responsables de l’export légal de leurs propres sauvegardes.
 
-When contributing code:
+## Licence
 
-1. Create a dedicated branch.
-2. Keep save-file logic separate from the interface.
-3. Test changes using copies of save files.
-4. Describe the change clearly in the pull request.
+Le code source est distribué sous [licence MIT](LICENSE.txt).
 
-<a id="acknowledgements"></a>
-
-## Acknowledgements
-
-Save-file research and implementation were assisted by the
-[pret/pokered](https://github.com/pret/pokered) disassembly project.
-
-Thanks to the Pokémon reverse-engineering and preservation communities for documenting the original games.
-
-<a id="legal-notice"></a>
-
-## Legal notice
-
-Pokémon and all related names are trademarks of Nintendo, Game Freak and Creatures.
-
-Pkm Gen 1 Save Editor is an unofficial, fan-made project. It is not affiliated with, endorsed by or sponsored by Nintendo, Game Freak or Creatures.
-
-This repository does not contain or distribute:
-
-- game ROMs;
-- BIOS files;
-- encryption keys;
-- copyrighted sprites;
-- proprietary game assets.
-
-Users are responsible for obtaining and exporting their own save files legally.
-
-<a id="license"></a>
-
-## License
-
-This project is distributed under the
-[MIT License](LICENSE).
-
-Copyright © 2026
-[Thomas Peccavet](https://github.com/ThomasPeccavet).
-
----
-
-<div align="center">
-
-Made with C# and .NET.
-
-<a href="#top">Back to top</a>
-
-</div>
+Copyright © 2026 [Thomas Peccavet](https://github.com/ThomasPeccavet).

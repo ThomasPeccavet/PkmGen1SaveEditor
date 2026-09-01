@@ -8,18 +8,18 @@ internal static class BoxSelectionForm
         {
             Text = "Déplacer vers une boîte",
             StartPosition = FormStartPosition.CenterParent,
-            ClientSize = new Size(340, 135),
+            ClientSize = new Size(430, 245),
             FormBorderStyle = FormBorderStyle.FixedDialog,
             MaximizeBox = false,
-            MinimizeBox = false,
-            Font = new Font("Segoe UI", 9F)
+            MinimizeBox = false
         };
+
+        PokemonTheme.Apply(form);
 
         ComboBox input = new()
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Location = new Point(20, 20),
-            Width = 300
+            Dock = DockStyle.Fill
         };
 
         for (int box = 1; box <= 12; box++)
@@ -30,18 +30,43 @@ internal static class BoxSelectionForm
         {
             Text = "Déplacer",
             DialogResult = DialogResult.OK,
-            Location = new Point(110, 75),
             Size = new Size(100, 32)
         };
         Button cancel = new()
         {
             Text = "Annuler",
             DialogResult = DialogResult.Cancel,
-            Location = new Point(220, 75),
             Size = new Size(100, 32)
         };
 
-        form.Controls.AddRange([input, confirm, cancel]);
+        TableLayoutPanel root = new()
+        {
+            Dock = DockStyle.Fill,
+            Padding = new Padding(16),
+            ColumnCount = 1,
+            RowCount = 2
+        };
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+
+        PokemonGroupBox group =
+            PokemonTheme.CreateGroup("BOÎTE DE DESTINATION");
+        group.Controls.Add(input);
+
+        FlowLayoutPanel buttons = new()
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.RightToLeft,
+            WrapContents = false,
+            Padding = new Padding(0, 6, 0, 0)
+        };
+        buttons.Controls.Add(confirm);
+        buttons.Controls.Add(cancel);
+
+        root.Controls.Add(group, 0, 0);
+        root.Controls.Add(buttons, 0, 1);
+        form.Controls.Add(root);
+        PokemonTheme.StyleDescendants(form);
         form.AcceptButton = confirm;
         form.CancelButton = cancel;
         return form.ShowDialog(owner) == DialogResult.OK
