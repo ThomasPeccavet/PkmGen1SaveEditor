@@ -16,7 +16,7 @@ public partial class MainForm : Form
 
     private void InitializeInterface()
     {
-        PokemonTheme.Apply(this);
+        BuildModernInterface();
 
         cmbGameVersion.Items.Clear();
         cmbGameVersion.Items.Add("Pokémon Rouge / Bleu — Français");
@@ -28,6 +28,229 @@ public partial class MainForm : Form
         tslStatus.Text = "Prêt — ouvrez un fichier .sav";
 
         SetEditorEnabled(false);
+    }
+
+    private CheckBox[] BadgeCheckBoxes =>
+    [
+        chkBadgeBoulder,
+        chkBadgeCascade,
+        chkBadgeThunder,
+        chkBadgeRainbow,
+        chkBadgeSoul,
+        chkBadgeMarsh,
+        chkBadgeVolcano,
+        chkBadgeEarth
+    ];
+
+    private void BuildModernInterface()
+    {
+        SuspendLayout();
+        Controls.Clear();
+
+        Text = "Pkm Gen 1 Save Editor";
+        ClientSize = new Size(1080, 700);
+        MinimumSize = new Size(900, 620);
+        StartPosition = FormStartPosition.CenterScreen;
+        ModernTheme.Apply(this);
+
+        TableLayoutPanel root = new()
+        {
+            Dock = DockStyle.Fill,
+            Padding = new Padding(22),
+            ColumnCount = 1,
+            RowCount = 4
+        };
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 122F));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 28F));
+
+        root.Controls.Add(CreateModernHeader(), 0, 0);
+        root.Controls.Add(CreateModernContent(), 0, 1);
+        root.Controls.Add(CreateModernActions(), 0, 2);
+
+        statusStrip1.Dock = DockStyle.Fill;
+        statusStrip1.Margin = new Padding(8, 0, 8, 0);
+        root.Controls.Add(statusStrip1, 0, 3);
+        Controls.Add(root);
+
+        // Les anciens conteneurs du Designer ne sont plus affichés.
+        // Leurs contrôles utiles ont été replacés dans la nouvelle interface.
+        pnlToolbar.Dispose();
+        grpTrainer.Dispose();
+        grpBadges.Dispose();
+
+        ModernTheme.StyleTree(this);
+        ResumeLayout(performLayout: true);
+    }
+
+    private Control CreateModernHeader()
+    {
+        GlassPanel header = new()
+        {
+            Dock = DockStyle.Fill,
+            Margin = new Padding(8, 4, 8, 8),
+            Padding = new Padding(24, 16, 24, 16)
+        };
+
+        TableLayoutPanel layout = new()
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Color.Transparent,
+            ColumnCount = 3,
+            RowCount = 2
+        };
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 205F));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 205F));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 58F));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 42F));
+
+        layout.Controls.Add(new Label
+        {
+            Text = "Pkm Gen 1 Save Editor",
+            Dock = DockStyle.Fill,
+            Font = new Font("Segoe UI Semibold", 22F, FontStyle.Bold),
+            ForeColor = ModernTheme.TextColor,
+            TextAlign = ContentAlignment.BottomLeft
+        }, 0, 0);
+
+        lblCurrentFile.Dock = DockStyle.Fill;
+        lblCurrentFile.AutoEllipsis = true;
+        lblCurrentFile.ForeColor = ModernTheme.MutedTextColor;
+        lblCurrentFile.TextAlign = ContentAlignment.TopLeft;
+        layout.Controls.Add(lblCurrentFile, 0, 1);
+
+        btnOpenSave.Text = "Ouvrir une sauvegarde";
+        btnOpenSave.Dock = DockStyle.Fill;
+        btnOpenSave.Margin = new Padding(8, 14, 8, 14);
+        btnOpenSave.Tag = "primary";
+        layout.Controls.Add(btnOpenSave, 1, 0);
+        layout.SetRowSpan(btnOpenSave, 2);
+
+        btnSaveAs.Text = "Enregistrer sous…";
+        btnSaveAs.Dock = DockStyle.Fill;
+        btnSaveAs.Margin = new Padding(8, 14, 0, 14);
+        layout.Controls.Add(btnSaveAs, 2, 0);
+        layout.SetRowSpan(btnSaveAs, 2);
+
+        header.Controls.Add(layout);
+        return header;
+    }
+
+    private Control CreateModernContent()
+    {
+        TableLayoutPanel content = new()
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount = 1
+        };
+        content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 52F));
+        content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 48F));
+
+        content.Controls.Add(ModernTheme.CreateCard(
+            "Dresseur",
+            "Informations générales contenues dans la sauvegarde.",
+            CreateTrainerFields()), 0, 0);
+        content.Controls.Add(ModernTheme.CreateCard(
+            "Badges de Kanto",
+            "Cochez les badges obtenus avant l’export.",
+            CreateBadgeFields()), 1, 0);
+        return content;
+    }
+
+    private Control CreateTrainerFields()
+    {
+        TableLayoutPanel table = new()
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount = 5
+        };
+        table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+        table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
+        for (int row = 0; row < 5; row++)
+            table.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
+
+        AddMainField(table, 0, "Version", cmbGameVersion);
+        AddMainField(table, 1, "Nom du joueur", txtPlayerName);
+        AddMainField(table, 2, "Nom du rival", txtRivalName);
+        AddMainField(table, 3, "Argent", numMoney);
+        AddMainField(table, 4, "Temps de jeu", txtPlayTime);
+        return table;
+    }
+
+    private Control CreateBadgeFields()
+    {
+        TableLayoutPanel table = new()
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount = 4,
+            Padding = new Padding(10)
+        };
+        table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+        table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+        for (int row = 0; row < 4; row++)
+            table.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+
+        CheckBox[] badges = BadgeCheckBoxes;
+        for (int index = 0; index < badges.Length; index++)
+        {
+            CheckBox badge = badges[index];
+            badge.Dock = DockStyle.Fill;
+            badge.Font = new Font("Segoe UI", 10F);
+            badge.Padding = new Padding(12, 0, 0, 0);
+            table.Controls.Add(badge, index % 2, index / 2);
+        }
+
+        return table;
+    }
+
+    private Control CreateModernActions()
+    {
+        FlowLayoutPanel actions = new()
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            Padding = new Padding(8, 9, 8, 5)
+        };
+
+        btnViewParty.Text = "Gérer l’équipe et les boîtes PC";
+        btnViewParty.AutoSize = true;
+        btnViewParty.Tag = "primary";
+        actions.Controls.Add(btnViewParty);
+
+        actions.Controls.Add(new Label
+        {
+            Text = "Les modifications sont enregistrées uniquement lors de l’export.",
+            AutoSize = true,
+            ForeColor = ModernTheme.MutedTextColor,
+            Padding = new Padding(16, 10, 0, 0)
+        });
+        return actions;
+    }
+
+    private static void AddMainField(
+        TableLayoutPanel table,
+        int row,
+        string title,
+        Control input)
+    {
+        table.Controls.Add(new Label
+        {
+            Text = title,
+            Dock = DockStyle.Fill,
+            ForeColor = ModernTheme.MutedTextColor,
+            TextAlign = ContentAlignment.MiddleLeft,
+            Margin = new Padding(6)
+        }, 0, row);
+
+        input.Dock = DockStyle.Fill;
+        input.Margin = new Padding(6, 10, 6, 10);
+        table.Controls.Add(input, 1, row);
     }
 
     private void btnOpenSave_Click(object sender, EventArgs e)
@@ -183,11 +406,8 @@ public partial class MainForm : Form
 
         numMoney.Value = 0;
 
-        foreach (Control control in grpBadges.Controls)
-        {
-            if (control is CheckBox checkBox)
-                checkBox.Checked = false;
-        }
+        foreach (CheckBox checkBox in BadgeCheckBoxes)
+            checkBox.Checked = false;
     }
 
     private void ResetLoadedSave()
@@ -197,10 +417,7 @@ public partial class MainForm : Form
         lblCurrentFile.Text = "Aucun fichier chargé";
         tslStatus.Text = "Aucune sauvegarde compatible chargée";
 
-        btnSaveAs.Enabled = false;
-        grpTrainer.Enabled = false;
-        grpBadges.Enabled = false;
-
+        SetEditorEnabled(false);
         ResetDisplayedValues();
     }
 
@@ -211,10 +428,7 @@ public partial class MainForm : Form
         numMoney.Value = saveFile.Money;
         txtPlayTime.Text = saveFile.FormattedPlayTime;
 
-        CheckBox[] badgeCheckBoxes = grpBadges.Controls
-            .OfType<CheckBox>()
-            .OrderBy(checkBox => checkBox.Top)
-            .ToArray();
+        CheckBox[] badgeCheckBoxes = BadgeCheckBoxes;
 
         for (int index = 0;
              index < badgeCheckBoxes.Length && index < 8;
@@ -229,20 +443,16 @@ public partial class MainForm : Form
     }
     private void SetEditorEnabled(bool enabled)
     {
-        grpTrainer.Enabled = enabled;
-        grpBadges.Enabled = enabled;
         btnSaveAs.Enabled = enabled;
+        btnViewParty.Enabled = enabled;
 
         cmbGameVersion.Enabled = enabled;
         txtPlayerName.Enabled = enabled;
         txtRivalName.Enabled = enabled;
         numMoney.Enabled = enabled;
 
-        foreach (CheckBox checkBox in
-                 grpBadges.Controls.OfType<CheckBox>())
-        {
+        foreach (CheckBox checkBox in BadgeCheckBoxes)
             checkBox.Enabled = enabled;
-        }
 
         // Le temps de jeu reste affiché, mais non modifiable pour le moment.
         txtPlayTime.Enabled = true;
@@ -258,10 +468,7 @@ public partial class MainForm : Form
         _currentSave.SetRivalName(txtRivalName.Text);
         _currentSave.SetMoney((int)numMoney.Value);
 
-        CheckBox[] badgeCheckBoxes = grpBadges.Controls
-            .OfType<CheckBox>()
-            .OrderBy(checkBox => checkBox.Top)
-            .ToArray();
+        CheckBox[] badgeCheckBoxes = BadgeCheckBoxes;
 
         for (int index = 0;
              index < badgeCheckBoxes.Length && index < 8;

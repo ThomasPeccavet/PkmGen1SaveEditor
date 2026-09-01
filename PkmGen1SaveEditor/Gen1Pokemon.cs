@@ -34,6 +34,30 @@ internal sealed class Gen1Pokemon
 
     public uint Experience { get; init; }
 
+    public ushort HpEv { get; init; }
+
+    public ushort AttackEv { get; init; }
+
+    public ushort DefenseEv { get; init; }
+
+    public ushort SpeedEv { get; init; }
+
+    public ushort SpecialEv { get; init; }
+
+    public byte AttackDv { get; init; }
+
+    public byte DefenseDv { get; init; }
+
+    public byte SpeedDv { get; init; }
+
+    public byte SpecialDv { get; init; }
+
+    public byte HpDv => (byte)(
+        ((AttackDv & 1) << 3) |
+        ((DefenseDv & 1) << 2) |
+        ((SpeedDv & 1) << 1) |
+        (SpecialDv & 1));
+
     public string Status { get; init; } = string.Empty;
 
     public IReadOnlyList<Gen1MoveSlot> Moves { get; init; } =

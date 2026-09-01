@@ -33,8 +33,9 @@ génération : informations du dresseur, équipe, statistiques des Pokémon et
 douze boîtes PC. Les checksums concernés sont recalculés après chaque
 modification afin de préserver l’intégrité de la sauvegarde.
 
-L’interface reprend l’esthétique de Pokémon Rouge/Bleu : palette Game Boy,
-cadres pixelisés et composants graphiques personnalisés.
+L’interface adopte un style **glass moderne et épuré** : cartes translucides,
+palette claire, actions hiérarchisées et mise en page adaptative. Les fenêtres
+restent confortables à lire lorsque leur taille ou l’échelle Windows change.
 
 > [!WARNING]
 > Le projet est encore en version alpha. Conservez toujours une copie intacte
@@ -62,7 +63,13 @@ cadres pixelisés et composants graphiques personnalisés.
 
 - affichage du surnom, de l’espèce, des types, du niveau, des PV, du statut et
   des attaques ;
-- fiche détaillée avec modification des statistiques et de l’expérience ;
+- fiche détaillée avec modification du niveau, de l’expérience et des
+  statistiques ;
+- édition des quatre attaques, des PP actuels et des PP Plus ;
+- édition des DV Attaque, Défense, Vitesse et Spécial de 0 à 15 ;
+- calcul automatique du DV des PV selon les règles de la génération I ;
+- édition des cinq EV, appelés « Stat Exp » en génération I, de 0 à 65 535 ;
+- recalcul des statistiques à partir de l’espèce, du niveau, des DV et des EV ;
 - ajout cohérent d’un Pokémon à partir de son espèce et de son niveau ;
 - remplacement, suppression et duplication ;
 - réorganisation de l’ordre de l’équipe ;
@@ -77,6 +84,7 @@ cadres pixelisés et composants graphiques personnalisés.
 - dépôt depuis l’équipe et retrait vers l’équipe ;
 - déplacement d’un Pokémon entre deux boîtes ;
 - recherche par surnom, espèce, type ou attaque ;
+- modification des attaques, PP, DV et EV depuis une boîte ;
 - synchronisation de la boîte active et des banques de stockage.
 
 ### Intégrité des données
@@ -90,15 +98,20 @@ cadres pixelisés et composants graphiques personnalisés.
 
 ## Aperçu de l’interface
 
-L’application comporte maintenant un thème commun à toutes les fenêtres :
+L’application comporte un thème commun à toutes les fenêtres :
 
-- palette vert crème inspirée de l’écran Game Boy ;
-- `PokemonGroupBox` dessinées à partir de tuiles 8 × 8 ;
-- boutons, champs et tableaux harmonisés ;
-- fiches d’ajout, de déplacement et de modification cohérentes avec la fenêtre
-  principale.
+- surfaces glass aux angles arrondis et fond bleu-gris doux ;
+- hiérarchie claire entre actions principales, secondaires et destructives ;
+- formulaires construits avec des dispositions adaptatives plutôt que des
+  positions fixes ;
+- tableaux allégés, lignes plus hautes et colonnes recentrées sur les données
+  essentielles ;
+- fiche Pokémon répartie en trois onglets : **Statistiques**,
+  **Attaques & PP** et **DV & EV** ;
+- dimensions minimales explicites pour éviter les champs ou textes tronqués.
 
-Une capture complète sera ajoutée avant la première version distribuable.
+Les captures de l’application seront ajoutées après validation visuelle de cette
+interface sur Windows, afin que le README montre exactement le rendu distribué.
 
 ## Compatibilité
 
@@ -149,9 +162,11 @@ Les futures versions prêtes à l’emploi seront publiées dans les
    cartouche.
 2. Lancez l’application et cliquez sur **Ouvrir une sauvegarde**.
 3. Modifiez les informations du dresseur si nécessaire.
-4. Ouvrez **Voir l’équipe** pour gérer l’équipe et les boîtes PC.
-5. Cliquez sur **Enregistrer sous…** dans la fenêtre principale.
-6. Importez le fichier `_edited.sav` dans votre émulateur ou votre matériel.
+4. Ouvrez **Gérer l’équipe et les boîtes PC**.
+5. Double-cliquez sur un Pokémon de l’équipe ou d’une boîte pour modifier ses
+   statistiques, attaques, PP, DV et EV.
+6. Cliquez sur **Enregistrer sous…** dans la fenêtre principale.
+7. Importez le fichier `_edited.sav` dans votre émulateur ou votre matériel.
 
 > [!TIP]
 > Travaillez toujours sur une copie. Ne remplacez votre sauvegarde originale
@@ -179,9 +194,10 @@ PkmGen1SaveEditor/
     ├── Gen1SpeciesCatalog.cs         # Noms et identifiants internes
     ├── Gen1SpeciesData.cs            # Stats, types et croissance
     ├── Gen1MoveCatalog.cs            # Attaques de la génération I
+    ├── Gen1StatBlock.cs              # Résultat d’un calcul de statistiques
     ├── PokemonSpriteService.cs       # Chargement et cache des sprites
-    ├── PokemonGroupBox.cs            # Cadre pixelisé personnalisé
-    ├── PokemonTheme.cs               # Thème partagé par les fenêtres
+    ├── GlassPanel.cs                  # Carte glass arrondie
+    ├── ModernTheme.cs                # Thème et styles partagés
     ├── MainForm.cs                    # Fenêtre principale
     ├── TeamForm.cs                    # Équipe et stockage PC
     ├── PokemonDetailsForm.cs          # Statistiques détaillées
@@ -198,6 +214,9 @@ PkmGen1SaveEditor/
 | Argent | 3 octets BCD |
 | Badges | 8 indicateurs binaires dans un octet |
 | Expérience | entier 24 bits big-endian |
+| DV | 4 valeurs de 4 bits ; DV PV dérivé |
+| EV / Stat Exp | 5 entiers 16 bits big-endian |
+| PP | 6 bits de PP actuels + 2 bits de PP Plus |
 | Équipe | 1 à 6 structures de 44 octets |
 | Boîte PC | 12 boîtes de 20 Pokémon |
 | Intégrité | checksums principal, banques PC et boîtes |
@@ -210,7 +229,6 @@ l’ajout futur d’autres versions du jeu.
 - Pokémon Jaune n’est pas pris en charge.
 - La langue et la version exactes ne sont pas encore détectées automatiquement.
 - Le temps de jeu est affiché mais n’est pas modifiable.
-- Les attaques et leurs PP sont affichés mais ne sont pas encore éditables.
 - Les objets du sac, le Pokédex et les options du jeu ne sont pas éditables.
 - La création d’un Pokémon est cohérente mais ne simule pas encore tous les
   détails d’une capture naturelle dans le jeu.
@@ -227,7 +245,9 @@ l’ajout futur d’autres versions du jeu.
 - [x] ajouter, remplacer, supprimer, dupliquer et réorganiser des Pokémon ;
 - [x] gérer les 12 boîtes PC et les transferts ;
 - [x] afficher les types, attaques et sprites ;
-- [x] unifier l’interface rétro sur toutes les fenêtres ;
+- [x] éditer les attaques, PP, DV et EV de l’équipe et des boîtes ;
+- [x] recalculer les statistiques depuis les DV et EV ;
+- [x] unifier l’interface glass moderne sur toutes les fenêtres ;
 - [x] compiler automatiquement chaque Pull Request sur Windows ;
 - [ ] ajouter des tests automatisés sur des sauvegardes anonymisées ;
 - [ ] publier la première version Windows.
@@ -237,7 +257,6 @@ l’ajout futur d’autres versions du jeu.
 - [ ] sauvegarde automatique de secours avant modification ;
 - [ ] glisser-déposer d’un fichier `.sav` ;
 - [ ] détection automatique du jeu, de la langue et de la région ;
-- [ ] édition des attaques, PP, DV et EV ;
 - [ ] édition du sac, du PC objets et du Pokédex ;
 - [ ] historique d’annulation/rétablissement ;
 - [ ] prise en charge de Pokémon Jaune ;
