@@ -29,25 +29,22 @@ internal sealed class AddPokemonForm : Form
     {
         Text = title;
         StartPosition = FormStartPosition.CenterParent;
-        ClientSize = new Size(480, 320);
+        ClientSize = new Size(560, 390);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
-        PokemonTheme.Apply(this);
+        ModernTheme.Apply(this);
 
         TableLayoutPanel root = new()
         {
             Dock = DockStyle.Fill,
-            Padding = new Padding(16),
+            Padding = new Padding(22),
             ColumnCount = 1,
             RowCount = 2
         };
 
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
-
-        PokemonGroupBox group =
-            PokemonTheme.CreateGroup("INFORMATIONS DU POKÉMON");
 
         TableLayoutPanel layout = new()
         {
@@ -58,9 +55,9 @@ internal sealed class AddPokemonForm : Form
 
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 33F));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 34F));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 33F));
 
         _speciesInput.DropDownStyle = ComboBoxStyle.DropDownList;
         _speciesInput.Dock = DockStyle.Fill;
@@ -101,33 +98,37 @@ internal sealed class AddPokemonForm : Form
         {
             Text = confirmText,
             DialogResult = DialogResult.OK,
-            Size = new Size(100, 32)
+            AutoSize = true,
+            Tag = "primary"
         };
 
         Button cancelButton = new()
         {
             Text = "Annuler",
             DialogResult = DialogResult.Cancel,
-            Size = new Size(100, 32)
+            AutoSize = true
         };
 
         buttons.Controls.Add(addButton);
         buttons.Controls.Add(cancelButton);
-        group.Controls.Add(layout);
-        root.Controls.Add(group, 0, 0);
+        root.Controls.Add(ModernTheme.CreateCard(
+            "Nouveau Pokémon",
+            "Choisissez l’espèce et le niveau. Le surnom est facultatif.",
+            layout), 0, 0);
         root.Controls.Add(buttons, 0, 1);
 
         AcceptButton = addButton;
         CancelButton = cancelButton;
         Controls.Add(root);
-        PokemonTheme.StyleDescendants(this);
+        ModernTheme.StyleTree(this);
     }
 
     private static Label CreateLabel(string text) => new()
     {
         Text = text,
         Dock = DockStyle.Fill,
-        TextAlign = ContentAlignment.MiddleLeft
+        TextAlign = ContentAlignment.MiddleLeft,
+        ForeColor = ModernTheme.MutedTextColor
     };
 
     private sealed record SpeciesChoice(byte Id, string Name);

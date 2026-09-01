@@ -36,7 +36,7 @@
             statusStrip1 = new StatusStrip();
             tslStatus = new ToolStripStatusLabel();
             tslVersion = new ToolStripStatusLabel();
-            grpTrainer = new PokemonGroupBox();
+            grpTrainer = new GroupBox();
             label5 = new Label();
             label4 = new Label();
             label3 = new Label();
@@ -47,7 +47,7 @@
             txtRivalName = new TextBox();
             txtPlayerName = new TextBox();
             cmbGameVersion = new ComboBox();
-            grpBadges = new PokemonGroupBox();
+            grpBadges = new GroupBox();
             chkBadgeEarth = new CheckBox();
             chkBadgeVolcano = new CheckBox();
             chkBadgeMarsh = new CheckBox();
@@ -399,7 +399,7 @@
         private StatusStrip statusStrip1;
         private ToolStripStatusLabel tslStatus;
         private ToolStripStatusLabel tslVersion;
-        private PokemonGroupBox grpTrainer;
+        private GroupBox grpTrainer;
         private Label label5;
         private Label label4;
         private Label label3;
@@ -410,7 +410,7 @@
         private TextBox txtRivalName;
         private TextBox txtPlayerName;
         private ComboBox cmbGameVersion;
-        private PokemonGroupBox grpBadges;
+        private GroupBox grpBadges;
         private CheckBox chkBadgeEarth;
         private CheckBox chkBadgeVolcano;
         private CheckBox chkBadgeMarsh;

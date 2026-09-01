@@ -7,15 +7,14 @@ internal partial class TeamForm : Form
     private readonly DataGridView _box = NewGrid();
     private readonly ComboBox _boxChoice = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 190 };
     private readonly TextBox _search = new() { Width = 220, PlaceholderText = "Nom, type ou attaque…" };
-    private readonly Label _partyInfo = new() { AutoSize = true, ForeColor = PokemonTheme.AccentColor };
-    private readonly Label _boxInfo = new() { AutoSize = true, ForeColor = PokemonTheme.AccentColor };
-    private readonly Label _selectedInfo = new() { AutoSize = true, ForeColor = PokemonTheme.AccentColor };
+    private readonly Label _partyInfo = new() { AutoSize = true, ForeColor = ModernTheme.MutedTextColor };
+    private readonly Label _boxInfo = new() { AutoSize = true, ForeColor = ModernTheme.MutedTextColor };
+    private readonly Label _selectedInfo = new() { AutoSize = true, ForeColor = ModernTheme.MutedTextColor };
     private readonly PictureBox _sprite = new()
     {
         Size = new Size(78, 78),
         SizeMode = PictureBoxSizeMode.Zoom,
-        BackColor = PokemonTheme.PanelBackColor,
-        BorderStyle = BorderStyle.FixedSingle
+        BackColor = Color.Transparent
     };
 
     private readonly Dictionary<string, Button> _buttons = [];
@@ -32,41 +31,46 @@ internal partial class TeamForm : Form
     {
         Text = "Équipe et boîtes PC";
         StartPosition = FormStartPosition.CenterParent;
-        ClientSize = new Size(1220, 690);
-        MinimumSize = new Size(1050, 600);
-        PokemonTheme.Apply(this);
+        ClientSize = new Size(1360, 780);
+        MinimumSize = new Size(1120, 660);
+        ModernTheme.Apply(this);
 
         TableLayoutPanel root = new()
         {
             Dock = DockStyle.Fill,
-            Padding = new Padding(16),
+            Padding = new Padding(22),
             RowCount = 3,
             ColumnCount = 1
         };
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 86));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 104));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 58));
 
         root.Controls.Add(BuildHeader(), 0, 0);
         root.Controls.Add(BuildStorage(), 0, 1);
         root.Controls.Add(BuildFooter(), 0, 2);
         Controls.Add(root);
-        PokemonTheme.StyleDescendants(this);
+        ModernTheme.StyleTree(this);
     }
 
     private Control BuildHeader()
     {
-        Panel panel = new() { Dock = DockStyle.Fill };
+        GlassPanel panel = new()
+        {
+            Dock = DockStyle.Fill,
+            Margin = new Padding(8, 4, 8, 8),
+            Padding = new Padding(22, 12, 110, 12)
+        };
         panel.Controls.Add(new Label
         {
-            Text = "GESTION DES POKÉMON",
+            Text = "Équipe et stockage PC",
             AutoSize = true,
-            Location = new Point(4, 4),
-            Font = new Font(Font.FontFamily, 16, FontStyle.Bold)
+            Location = new Point(24, 14),
+            Font = new Font("Segoe UI Semibold", 20, FontStyle.Bold)
         });
-        _selectedInfo.Location = new Point(6, 44);
+        _selectedInfo.Location = new Point(26, 58);
         _selectedInfo.Text = "Sélectionnez un Pokémon pour afficher ses informations.";
-        _sprite.Location = new Point(ClientSize.Width - 120, 0);
+        _sprite.Location = new Point(panel.Width - 92, 8);
         _sprite.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         panel.Controls.Add(_selectedInfo);
         panel.Controls.Add(_sprite);
@@ -118,7 +122,6 @@ internal partial class TeamForm : Form
     private Control BuildPartyPanel()
     {
         ConfigurePartyGrid();
-        PokemonGroupBox group = NewGroup("ÉQUIPE");
         TableLayoutPanel layout = NewSectionLayout(3, 28, 78);
 
         FlowLayoutPanel actions = NewActions();
@@ -134,14 +137,15 @@ internal partial class TeamForm : Form
         layout.Controls.Add(_partyInfo, 0, 0);
         layout.Controls.Add(_party, 0, 1);
         layout.Controls.Add(actions, 0, 2);
-        group.Controls.Add(layout);
-        return group;
+        return ModernTheme.CreateCard(
+            "Équipe active",
+            "Double-cliquez sur un Pokémon pour modifier ses stats, attaques, PP, DV et EV.",
+            layout);
     }
 
     private Control BuildBoxPanel()
     {
         ConfigureBoxGrid();
-        PokemonGroupBox group = NewGroup("BOÎTES PC");
         TableLayoutPanel layout = NewSectionLayout(4, 38, 28, 78);
         FlowLayoutPanel filters = NewActions();
         filters.WrapContents = false;
@@ -162,8 +166,10 @@ internal partial class TeamForm : Form
         layout.Controls.Add(_boxInfo, 0, 1);
         layout.Controls.Add(_box, 0, 2);
         layout.Controls.Add(actions, 0, 3);
-        group.Controls.Add(layout);
-        return group;
+        return ModernTheme.CreateCard(
+            "Boîtes PC",
+            "Parcourez les 12 boîtes, recherchez un Pokémon ou transférez-le vers l’équipe.",
+            layout);
     }
 
     private Control BuildFooter()
@@ -180,8 +186,8 @@ internal partial class TeamForm : Form
     private void ConfigurePartyGrid()
     {
         AddColumns(_party,
-            ("N°", 35), ("Surnom", 85), ("Espèce", 85), ("Type(s)", 90),
-            ("Niv.", 42), ("PV", 70), ("Statut", 55), ("Attaques", 150));
+            ("N°", 34), ("Surnom", 92), ("Espèce", 92),
+            ("Niveau", 52), ("PV", 78), ("Statut", 65));
         _party.SelectionChanged += (_, _) => SelectionChanged(PartySelection());
         _party.CellDoubleClick += PartyDoubleClick;
     }
@@ -189,9 +195,10 @@ internal partial class TeamForm : Form
     private void ConfigureBoxGrid()
     {
         AddColumns(_box,
-            ("N°", 35), ("Surnom", 85), ("Espèce", 80), ("Type(s)", 90),
-            ("Niv.", 42), ("Statut", 55), ("Attaques", 150), ("ID OT", 55));
+            ("N°", 34), ("Surnom", 92), ("Espèce", 92),
+            ("Niveau", 52), ("Statut", 65), ("ID OT", 60));
         _box.SelectionChanged += (_, _) => SelectionChanged(BoxSelection());
+        _box.CellDoubleClick += BoxDoubleClick;
     }
 
     private void LoadEverything()
@@ -220,9 +227,9 @@ internal partial class TeamForm : Form
         foreach (Gen1Pokemon pokemon in list)
         {
             int row = _party.Rows.Add(
-                pokemon.Slot, pokemon.Nickname, pokemon.SpeciesName, pokemon.Types,
+                pokemon.Slot, pokemon.Nickname, pokemon.SpeciesName,
                 pokemon.Level, $"{pokemon.CurrentHp} / {pokemon.MaximumHp}",
-                pokemon.Status, pokemon.MovesSummary);
+                pokemon.Status);
             _party.Rows[row].Tag = pokemon;
         }
         _partyInfo.Text = $"{list.Count}/6 Pokémon — double-cliquez pour modifier les statistiques";
@@ -249,8 +256,8 @@ internal partial class TeamForm : Form
         foreach (Gen1Pokemon pokemon in shown)
         {
             int row = _box.Rows.Add(
-                pokemon.Slot, pokemon.Nickname, pokemon.SpeciesName, pokemon.Types,
-                pokemon.Level, pokemon.Status, pokemon.MovesSummary,
+                pokemon.Slot, pokemon.Nickname, pokemon.SpeciesName,
+                pokemon.Level, pokemon.Status,
                 pokemon.OriginalTrainerId);
             _box.Rows[row].Tag = pokemon;
         }
@@ -350,6 +357,19 @@ internal partial class TeamForm : Form
         if (form.ShowDialog(this) == DialogResult.OK) LoadEverything();
     }
 
+    private void BoxDoubleClick(object? sender, DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex < 0 ||
+            _box.Rows[e.RowIndex].Tag is not Gen1Pokemon pokemon)
+        {
+            return;
+        }
+
+        using PokemonDetailsForm form = new(_save, pokemon);
+        if (form.ShowDialog(this) == DialogResult.OK)
+            LoadEverything();
+    }
+
     private void Run(Action action, string title)
     {
         try { action(); LoadEverything(); }
@@ -402,6 +422,10 @@ internal partial class TeamForm : Form
     private void AddAction(FlowLayoutPanel panel, string key, string text, EventHandler handler)
     {
         Button button = NewButton(text);
+        if (key is "add" or "boxAdd" or "heal")
+            button.Tag = "primary";
+        else if (key is "delete" or "boxDelete")
+            button.Tag = "danger";
         button.Click += handler;
         _buttons[key] = button;
         panel.Controls.Add(button);
@@ -414,7 +438,7 @@ internal partial class TeamForm : Form
         AllowUserToResizeRows = false, RowHeadersVisible = false,
         SelectionMode = DataGridViewSelectionMode.FullRowSelect,
         AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-        BackgroundColor = PokemonTheme.WindowBackColor
+        BackgroundColor = ModernTheme.WindowBackColor
     };
 
     private static void AddColumns(DataGridView grid, params (string Header, float Weight)[] columns)
@@ -422,9 +446,6 @@ internal partial class TeamForm : Form
         foreach ((string header, float weight) in columns)
             grid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = header, FillWeight = weight });
     }
-
-    private static PokemonGroupBox NewGroup(string text) =>
-        PokemonTheme.CreateGroup(text);
 
     private static TableLayoutPanel NewSectionLayout(int rows, params int[] fixedHeights)
     {
@@ -450,7 +471,7 @@ internal partial class TeamForm : Form
 
     private static Button NewButton(string text) => new()
     {
-        Text = text, AutoSize = true, MinimumSize = new Size(92, 32), Margin = new Padding(3)
+        Text = text, AutoSize = true, MinimumSize = new Size(104, 38), Margin = new Padding(4)
     };
 
     private sealed record BoxItem(int Number, string Label)

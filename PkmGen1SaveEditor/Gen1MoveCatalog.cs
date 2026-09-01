@@ -11,6 +11,17 @@ internal static class Gen1MoveCatalog
     public static byte GetBasePp(byte moveId) =>
         moveId < BasePp.Length ? BasePp[moveId] : (byte)0;
 
+    public static IEnumerable<(byte Id, string Name)> GetAll()
+    {
+        yield return (0, "— Aucun —");
+
+        for (int moveId = 1; moveId <= 0xA5; moveId++)
+        {
+            byte id = (byte)moveId;
+            yield return (id, GetName(id));
+        }
+    }
+
 
     public static string GetName(byte moveId)
     {

@@ -96,6 +96,15 @@ internal sealed partial class Gen1SaveFile
             Status = DecodePokemonStatus(Data[pokemonOffset + 4]),
             OriginalTrainerId = ReadBigEndianUInt16(pokemonOffset + 12),
             Experience = ReadBigEndianUInt24(pokemonOffset + 14),
+            HpEv = ReadBigEndianUInt16(pokemonOffset + 17),
+            AttackEv = ReadBigEndianUInt16(pokemonOffset + 19),
+            DefenseEv = ReadBigEndianUInt16(pokemonOffset + 21),
+            SpeedEv = ReadBigEndianUInt16(pokemonOffset + 23),
+            SpecialEv = ReadBigEndianUInt16(pokemonOffset + 25),
+            AttackDv = (byte)(Data[pokemonOffset + 27] >> 4),
+            DefenseDv = (byte)(Data[pokemonOffset + 27] & 0x0F),
+            SpeedDv = (byte)(Data[pokemonOffset + 28] >> 4),
+            SpecialDv = (byte)(Data[pokemonOffset + 28] & 0x0F),
             Level = includePartyStats
                 ? Data[pokemonOffset + 33]
                 : Data[pokemonOffset + 3],
@@ -140,6 +149,198 @@ internal sealed partial class Gen1SaveFile
             PartyNameSize);
 
         UpdateChecksum();
+    }
+
+    public Gen1StatBlock CalculateStatsPreview(
+        byte speciesId,
+        byte level,
+        byte attackDv,
+        byte defenseDv,
+        byte speedDv,
+        byte specialDv,
+        ushort hpEv,
+        ushort attackEv,
+        ushort defenseEv,
+        ushort speedEv,
+        ushort specialEv)
+    {
+        ValidateTrainingValues(
+            level,
+            attackDv,
+            defenseDv,
+            speedDv,
+            specialDv);
+
+        byte[] pokemonData = new byte[BoxPokemonSize];
+        pokemonData[0] = speciesId;
+        pokemonData[3] = level;
+        pokemonData[27] = (byte)((attackDv << 4) | defenseDv);
+        pokemonData[28] = (byte)((speedDv << 4) | specialDv);
+        WriteBigEndianUInt16(pokemonData, 17, hpEv);
+        WriteBigEndianUInt16(pokemonData, 19, attackEv);
+        WriteBigEndianUInt16(pokemonData, 21, defenseEv);
+        WriteBigEndianUInt16(pokemonData, 23, speedEv);
+        WriteBigEndianUInt16(pokemonData, 25, specialEv);
+
+        PokemonStats stats = CalculateStats(pokemonData);
+        return new Gen1StatBlock(
+            stats.MaximumHp,
+            stats.Attack,
+            stats.Defense,
+            stats.Speed,
+            stats.Special);
+    }
+
+    public void SetPokemonAdvancedData(
+        int pokemonIndex,
+        int? boxNumber,
+        byte level,
+        uint experience,
+        ushort currentHp,
+        ushort maximumHp,
+        ushort attack,
+        ushort defense,
+        ushort speed,
+        ushort special,
+        byte attackDv,
+        byte defenseDv,
+        byte speedDv,
+        byte specialDv,
+        ushort hpEv,
+        ushort attackEv,
+        ushort defenseEv,
+        ushort speedEv,
+        ushort specialEv,
+        IReadOnlyList<Gen1MoveSlot> moves)
+    {
+        ValidateTrainingValues(
+            level,
+            attackDv,
+            defenseDv,
+            speedDv,
+            specialDv);
+
+        if (experience > 0xFFFFFF)
+            throw new ArgumentOutOfRangeException(
+                nameof(experience),
+                "L'expérience ne peut pas dépasser 16 777 215.");
+
+        if (moves.Count != 4)
+            throw new ArgumentException(
+                "Les quatre emplacements d'attaque sont requis.",
+                nameof(moves));
+
+        int pokemonOffset;
+
+        if (boxNumber is null)
+        {
+            ValidatePartyIndex(pokemonIndex);
+            pokemonOffset =
+                PartyPokemonDataOffset + pokemonIndex * PartyPokemonSize;
+
+            if (maximumHp == 0 || attack == 0 || defense == 0 ||
+                speed == 0 || special == 0)
+            {
+                throw new ArgumentException(
+                    "Les statistiques de l'équipe doivent être supérieures à zéro.");
+            }
+
+            if (currentHp > maximumHp)
+                throw new ArgumentException(
+                    "Les PV actuels ne peuvent pas dépasser les PV maximums.");
+        }
+        else
+        {
+            int boxOffset = GetAuthoritativeBoxOffset(boxNumber.Value);
+            int count = ReadBoxCount(boxOffset, boxNumber.Value);
+            ValidateIndex(pokemonIndex, count, nameof(pokemonIndex));
+            pokemonOffset =
+                boxOffset + BoxPokemonDataRelativeOffset +
+                pokemonIndex * BoxPokemonSize;
+        }
+
+        Data[pokemonOffset + 3] = level;
+        WriteBigEndianUInt16(pokemonOffset + 1, currentHp);
+        WriteBigEndianUInt24(pokemonOffset + 14, experience);
+        WriteBigEndianUInt16(pokemonOffset + 17, hpEv);
+        WriteBigEndianUInt16(pokemonOffset + 19, attackEv);
+        WriteBigEndianUInt16(pokemonOffset + 21, defenseEv);
+        WriteBigEndianUInt16(pokemonOffset + 23, speedEv);
+        WriteBigEndianUInt16(pokemonOffset + 25, specialEv);
+        Data[pokemonOffset + 27] =
+            (byte)((attackDv << 4) | defenseDv);
+        Data[pokemonOffset + 28] =
+            (byte)((speedDv << 4) | specialDv);
+
+        for (int moveIndex = 0; moveIndex < moves.Count; moveIndex++)
+        {
+            Gen1MoveSlot move = moves[moveIndex];
+
+            if (move.MoveId > 0xA5)
+                throw new ArgumentOutOfRangeException(
+                    nameof(moves),
+                    $"L'attaque de l'emplacement {moveIndex + 1} est invalide.");
+
+            if (move.PpUps is < 0 or > 3)
+                throw new ArgumentOutOfRangeException(
+                    nameof(moves),
+                    "Les PP Plus doivent être compris entre 0 et 3.");
+
+            int maximumPp = move.MoveId == 0
+                ? 0
+                : Math.Min(
+                    63,
+                    Gen1MoveCatalog.GetBasePp(move.MoveId) *
+                    (5 + move.PpUps) / 5);
+
+            if (move.CurrentPp is < 0 || move.CurrentPp > maximumPp)
+                throw new ArgumentOutOfRangeException(
+                    nameof(moves),
+                    $"Les PP de l'emplacement {moveIndex + 1} " +
+                    $"doivent être compris entre 0 et {maximumPp}.");
+
+            Data[pokemonOffset + 8 + moveIndex] = move.MoveId;
+            Data[pokemonOffset + 29 + moveIndex] =
+                move.MoveId == 0
+                    ? (byte)0
+                    : (byte)((move.PpUps << 6) | move.CurrentPp);
+        }
+
+        if (boxNumber is null)
+        {
+            Data[pokemonOffset + 33] = level;
+            WriteBigEndianUInt16(pokemonOffset + 34, maximumHp);
+            WriteBigEndianUInt16(pokemonOffset + 36, attack);
+            WriteBigEndianUInt16(pokemonOffset + 38, defense);
+            WriteBigEndianUInt16(pokemonOffset + 40, speed);
+            WriteBigEndianUInt16(pokemonOffset + 42, special);
+            UpdateChecksum();
+        }
+        else
+        {
+            UpdateAllChecksums();
+        }
+    }
+
+    private static void ValidateTrainingValues(
+        byte level,
+        byte attackDv,
+        byte defenseDv,
+        byte speedDv,
+        byte specialDv)
+    {
+        if (level is < 1 or > 100)
+            throw new ArgumentOutOfRangeException(
+                nameof(level),
+                "Le niveau doit être compris entre 1 et 100.");
+
+        if (attackDv > 15 || defenseDv > 15 ||
+            speedDv > 15 || specialDv > 15)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(attackDv),
+                "Chaque DV doit être compris entre 0 et 15.");
+        }
     }
 
     public void DuplicatePartyPokemon(int partyIndex)

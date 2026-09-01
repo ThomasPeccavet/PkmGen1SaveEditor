@@ -8,13 +8,13 @@ internal static class BoxSelectionForm
         {
             Text = "Déplacer vers une boîte",
             StartPosition = FormStartPosition.CenterParent,
-            ClientSize = new Size(430, 245),
+            ClientSize = new Size(500, 300),
             FormBorderStyle = FormBorderStyle.FixedDialog,
             MaximizeBox = false,
             MinimizeBox = false
         };
 
-        PokemonTheme.Apply(form);
+        ModernTheme.Apply(form);
 
         ComboBox input = new()
         {
@@ -30,28 +30,25 @@ internal static class BoxSelectionForm
         {
             Text = "Déplacer",
             DialogResult = DialogResult.OK,
-            Size = new Size(100, 32)
+            AutoSize = true,
+            Tag = "primary"
         };
         Button cancel = new()
         {
             Text = "Annuler",
             DialogResult = DialogResult.Cancel,
-            Size = new Size(100, 32)
+            AutoSize = true
         };
 
         TableLayoutPanel root = new()
         {
             Dock = DockStyle.Fill,
-            Padding = new Padding(16),
+            Padding = new Padding(22),
             ColumnCount = 1,
             RowCount = 2
         };
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
-
-        PokemonGroupBox group =
-            PokemonTheme.CreateGroup("BOÎTE DE DESTINATION");
-        group.Controls.Add(input);
 
         FlowLayoutPanel buttons = new()
         {
@@ -63,10 +60,13 @@ internal static class BoxSelectionForm
         buttons.Controls.Add(confirm);
         buttons.Controls.Add(cancel);
 
-        root.Controls.Add(group, 0, 0);
+        root.Controls.Add(ModernTheme.CreateCard(
+            "Boîte de destination",
+            "Sélectionnez une autre boîte PC pour déplacer ce Pokémon.",
+            input), 0, 0);
         root.Controls.Add(buttons, 0, 1);
         form.Controls.Add(root);
-        PokemonTheme.StyleDescendants(form);
+        ModernTheme.StyleTree(form);
         form.AcceptButton = confirm;
         form.CancelButton = cancel;
         return form.ShowDialog(owner) == DialogResult.OK

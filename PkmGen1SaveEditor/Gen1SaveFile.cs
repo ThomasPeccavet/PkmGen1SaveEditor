@@ -257,6 +257,33 @@ internal sealed partial class Gen1SaveFile
             Experience =
                 ReadBigEndianUInt24(pokemonOffset + 14),
 
+            HpEv =
+                ReadBigEndianUInt16(pokemonOffset + 17),
+
+            AttackEv =
+                ReadBigEndianUInt16(pokemonOffset + 19),
+
+            DefenseEv =
+                ReadBigEndianUInt16(pokemonOffset + 21),
+
+            SpeedEv =
+                ReadBigEndianUInt16(pokemonOffset + 23),
+
+            SpecialEv =
+                ReadBigEndianUInt16(pokemonOffset + 25),
+
+            AttackDv =
+                (byte)(Data[pokemonOffset + 27] >> 4),
+
+            DefenseDv =
+                (byte)(Data[pokemonOffset + 27] & 0x0F),
+
+            SpeedDv =
+                (byte)(Data[pokemonOffset + 28] >> 4),
+
+            SpecialDv =
+                (byte)(Data[pokemonOffset + 28] & 0x0F),
+
             Level =
                 Data[pokemonOffset + 33],
 
